@@ -1,0 +1,131 @@
+@import url(../../../stylesheets/application.css);
+
+body, #wrapper { background-color:#EEEEEE; }
+#header, #top-menu { margin: 0px 10px 0px 11px; }
+#main { background: #EEEEEE; margin: 8px 10px 0px 10px; }
+#content, #main.nosidebar #content { background: #fff; border-right: 1px solid #bbb; border-bottom: 1px solid #bbb; border-left: 1px solid #d7d7d7; border-top: 1px solid #d7d7d7; }
+#footer { background-color:#EEEEEE; border: 0px; }
+
+/* Headers */
+h2, h3, h4, .wiki h1, .wiki h2, .wiki h3 {border-bottom: 0px;}
+
+/* Menu */
+#main-menu li a { background-color: #507AAA; font-weight: bold;}
+#main-menu li a:hover { background: #507AAA; text-decoration: underline; }
+#main-menu li a.selected, #main-menu li a.selected:hover { background-color:#EEEEEE; }
+
+/* Tables */
+table.list tbody td, table.list tbody tr:hover td { border: solid 1px #d7d7d7; }
+table.list thead th {
+    border-width: 1px;
+    border-style: solid;
+    border-top-color: #d7d7d7;
+    border-right-color: #d7d7d7;
+    border-left-color: #d7d7d7;
+    border-bottom-color: #999999;
+}
+
+/* Issues grid styles by priorities */
+table.list tr.issue a { color: #666; }
+
+tr.odd.priority-9, div.pane .odd.priority-9, table.list tbody tr.odd.priority-9:hover, div.pane .odd.priority-9:hover { color: #900; font-weight: bold; }
+tr.odd.priority-9, div.pane .odd.priority-9 { background-color: #ff4444; }
+tr.even.priority-9, div.pane .even.priority-9, table.list tbody tr.even.priority-9:hover, div.pane .even.priority-9:hover { color: #900; font-weight: bold; }
+tr.even.priority-9, div.pane .even.priority-9 { background-color: #ff5555; }
+tr.priority-9 a, div.pane .priority-9 a, tr.priority-9:hover a { color: #900; }
+tr.odd.priority-9 td, tr.even.priority-9 td { border-color: #ffb4b4; }
+
+tr.odd.priority-8, div.pane .odd.priority-8, table.list tbody tr.odd.priority-8:hover, div.pane .odd.priority-8:hover { color: #900; font-weight: bold; }
+tr.odd.priority-8, div.pane .odd.priority-8 { background-color: #FF6666; }
+tr.even.priority-8, div.pane .even.priority-8, table.list tbody tr.even.priority-8:hover, div.pane .even.priority-8:hover { color: #900; font-weight: bold; }
+tr.even.priority-8, div.pane .even.priority-8 { background-color: #FF6060; }
+tr.priority-8 a, div.pane .priority-8 a, tr.priority-8:hover a { color: #900; }
+tr.odd.priority-8 td, tr.even.priority-8 td { border-color: #ffb4b4; }
+
+tr.odd.priority-7, div.pane .odd.priority-7, table.list tbody tr.odd.priority-7:hover, div.pane .odd.priority-7:hover { color: #900; font-weight: bold; }
+tr.odd.priority-7, div.pane .odd.priority-7 { background-color: #FF7777; }
+tr.even.priority-7, div.pane .even.priority-7, table.list tbody tr.even.priority-7:hover, div.pane .even.priority-7:hover { color: #900; font-weight: bold; }
+tr.even.priority-7, div.pane .even.priority-7 { background-color: #FF7070; }
+tr.priority-7 a, div.pane .priority-7 a, tr.priority-7:hover a { color: #900; }
+tr.odd.priority-7 td, tr.even.priority-7 td { border-color: #ffb4b4; }
+
+tr.odd.priority-6, div.pane .odd.priority-6, table.list tbody tr.odd.priority-6:hover, div.pane .odd.priority-6:hover { color: #559; font-weight: normal; }
+tr.odd.priority-6, div.pane .odd.priority-6 { background-color: #ffAaAa; }
+tr.even.priority-6, div.pane .even.priority-6, table.list tbody tr.even.priority-6:hover, div.pane .even.priority-6:hover { color: #559; font-weight: normal; }
+tr.even.priority-6, div.pane .even.priority-6 { background-color: #ffA0A0; }
+tr.priority-6 a, div.pane .priority-6 a, tr.priority-6:hover a { color: #900; }
+tr.odd.priority-6 td, tr.even.priority-6 td { border-color: #ffb4b4; }
+
+tr.odd.priority-5, div.pane .odd.priority-5, table.list tbody tr.odd.priority-5:hover, div.pane .odd.priority-5:hover { color: #559; font-weight: normal; }
+tr.odd.priority-5, div.pane .odd.priority-5 { background-color: #ffbbbb; }
+tr.even.priority-5, div.pane .even.priority-5, table.list tbody tr.even.priority-5:hover, div.pane .even.priority-5:hover { color: #559; font-weight: normal; }
+tr.even.priority-5, div.pane .even.priority-5 { background-color: #ffb0b0; }
+tr.priority-5 a, div.pane .priority-5 a, tr.priority-5:hover a { color: #900; }
+tr.odd.priority-5 td, tr.even.priority-5 td { border-color: #ffb4b4; }
+
+tr.odd.priority-4, div.pane .odd.priority-4, table.list tbody tr.odd.priority-4:hover, div.pane .odd.priority-4:hover { color: #559; font-weight: normal; }
+tr.odd.priority-4, div.pane .odd.priority-4 { background-color: #ffdddd; }
+tr.even.priority-4, div.pane .even.priority-4, table.list tbody tr.even.priority-4:hover, div.pane .even.priority-4:hover { color: #559; font-weight: normal; }
+tr.even.priority-4, div.pane .even.priority-4 { background-color: #ffd0d0; }
+tr.priority-4 a, div.pane .priority-4 a, tr.priority-4:hover a { color: #900; }
+tr.odd.priority-4 td, tr.even.priority-4 td { border-color: #ffb4b4; }
+
+tr.odd.priority-3, div.pane .odd.priority-3, table.list tbody tr.odd.priority-3:hover, div.pane .odd.priority-3:hover { color: #559; font-weight: normal; }
+tr.odd.priority-3, div.pane .odd.priority-3 { background-color: #fee; }
+tr.even.priority-3, div.pane .even.priority-3, table.list tbody tr.even.priority-3:hover, div.pane .even.priority-3:hover { color: #559; font-weight: normal; }
+tr.even.priority-3, div.pane .even.priority-3 { background-color: #fff2f2; }
+tr.priority-3 a, div.pane .priority-3 a, tr.priority-3:hover a { color: #900; }
+tr.odd.priority-3 td, tr.even.priority-3 td { border-color: #ffb4b4; }
+
+tr.odd.priority-2, div.pane .odd.priority-2, table.list tbody tr.odd.priority-2:hover, div.pane .odd.priority-2:hover { color: #559; font-weight: normal; }
+tr.odd.priority-2, div.pane .odd.priority-2 { background-color: #eaf7ff; }
+tr.even.priority-2, div.pane .even.priority-2, table.list tbody tr.even.priority-2:hover, div.pane .even.priority-2:hover { color: #559; font-weight: normal; }
+tr.even.priority-2, div.pane .even.priority-2 { background-color: #f2feff; }
+tr.priority-2 a, div.pane .priority-2 a, tr.priority-2:hover a { color: #900; }
+tr.odd.priority-2 td, tr.even.priority-2 td { border-color: #ffb4b4; }
+
+tr.odd.priority-1, div.pane .odd.priority-1, table.list tbody tr.odd.priority-1:hover, div.pane .odd.priority-1:hover { color: #559; font-weight: normal; }
+tr.odd.priority-1, div.pane .odd.priority-1 { background-color: #f5f5f5; }
+tr.even.priority-1, div.pane .even.priority-1, table.list tbody tr.even.priority-1:hover, div.pane .even.priority-1:hover { color: #559; font-weight: normal; }
+tr.even.priority-1, div.pane .even.priority-1 { background-color: #ffffff; }
+tr.priority-1 a, div.pane .priority-1 a, tr.priority-1:hover a { color: #900; }
+tr.odd.priority-1 td, tr.even.priority-1 td { border-color: #ffb4b4; }
+
+
+/* Buttons */
+input[type="button"], input[type="submit"], input[type="reset"] { background-color: #f2f2f2; color: #222222; border: 1px outset #cccccc; }
+input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover { background-color: #ccccbb; }
+
+/* Fields */
+input[type="text"], input[type="password"], textarea, select { padding: 2px; border: 1px solid #d7d7d7; }
+input[type="text"], input[type="password"] { padding: 3px; }
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus { border: 1px solid #888866; }
+option { border-bottom: 1px dotted #d7d7d7; }
+
+/* Misc */
+.box { background-color: #fcfcfc; }
+
+/* Status Styles */
+a.issue.status-6, a.issue.status-6:link, a.issue.status-6:visited, a.issue.status-5, a.issue.status-5:link, a.issue.status-5:visited { text-decoration: line-through; }
+
+li.issue.status-9, tr.issue.status-9 { font-style:italic;}
+
+#roadmap .issue, #panes .issue { background-repeat: no-repeat; padding: 2px 0 3px 20px;}
+.issues .issue  { background-repeat: no-repeat; background-position: left bottom ; padding: 2px 0 3px 20px;}
+.issues .issue td {height: 30px;}
+
+.list .issue.status-1 {background-image: url(../images/new.png)}
+.list .issue.status-2 {background-image: url(../images/inprogress.png)}
+.list .issue.status-3 {background-image: url(../images/resolved.png)}
+.list .issue.status-4 {background-image: url(../images/feedback.png)}
+.list .issue.status-5 {background-image: url(../images/readyforrelease.png)}
+.list .issue.status-6 {background-image: url(../images/releasedforapproval.png)}
+.list .issue.status-7 {background-image: url(../images/notapproved.png)}
+.list .issue.status-8 {background-image: url(../images/approved.png)}
+.list .issue.status-9 {background-image: url(../images/onhold.png)}
+.list .issue.status-10 {background-image: url(../images/rejected.png)}
+.list .issue.status-11 {background-image: url(../images/closed.png)}
+
+.issue:not(.assigned-to-me) { background-color: #ffffbb;}
+
+table.progress td.todo { background: #FFF none repeat scroll 0%; }
