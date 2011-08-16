@@ -32,5 +32,9 @@ namespace :deploy do
   task :symlink_db, :roles => :app do
     run "ln -nfs #{shared_path}/config/database.yml #{release_path}/config/database.yml"
   end
+  desc "Symlinks the files"
+  task :symlink_files, :roles => :app do
+    run "ln -nfs #{shared_path}/files #{release_path}/files"
+  end
 end
 after 'deploy:update_code', 'deploy:symlink_db'

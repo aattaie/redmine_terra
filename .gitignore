@@ -21,5 +21,4 @@
 /tmp/sessions/*
 /tmp/sockets/*
 /tmp/test/*
-/vendor/rails
 *.rbc
