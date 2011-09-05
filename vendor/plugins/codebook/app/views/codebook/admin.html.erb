@@ -1,0 +1,56 @@
+<h2><%= l(:codebook_admin_title) %></h2>
+
+<h4><%= l(:codebook_admin_text) %></h4>
+
+  <div id="dashboard" class="topmargin">
+
+    <div class="box adminbox" id="new_language">
+      <span class="cb_label"><%= l(:codebook_admin_label_language) %></span>
+
+      <% form_for :code_language, @language, :url => { :action => "create_category" } do |f| %>  
+          <%= f.text_field :name, :size => 20 %>
+          <%= submit_tag l(:codebook_admin_label_add) %>
+      <% end %> 
+
+      <hr />
+
+      <span class="cb_label"><%= l(:codebook_admin_label_available) %></span>
+
+      <table style="width: 280px;">
+      <thead>
+        <tr><th><%= l(:codebook_table_header_lang) %></th><th></th><th><%= l(:codebook_table_header_actions) %></th></tr>
+      </thead>
+      <tbody>
+        <%- renderable = supported_languages() -%>
+        <%= render :partial => 'code_language', :collection => @languages, :locals => { :supported => renderable } %>
+      </tbody>
+      </table>
+      <br />
+      <p><span class="cb_remark">*</span> syntax highlighting is provided by <%= link_to "CodeRay", "http://coderay.rubychan.de" %></p>
+    </div>
+
+    <div class="box adminbox" id="new_category">
+      <span class="cb_label"><%= l(:codebook_admin_label_area) %></span>
+      <br/>
+      <% form_for :code_area, @area, :url => { :action => "create_category" } do |f| %>  
+          <%= f.text_field :name, :size => 20  %>
+          <%= submit_tag l(:codebook_admin_label_add) %>
+      <% end %> 
+      <hr/>
+      <table style="width: 280px;">
+      <thead>
+        <tr><th><%= l(:codebook_table_header_area) %></th><th><%= l(:codebook_table_header_actions) %></th></tr>
+      </thead>
+      <tbody>
+        <%= render :partial => 'code_area', :collection => @areas %>
+      </tbody>
+      </table>
+    </div>    
+
+  </div>
+
+
+
+<% content_for :sidebar do %>
+  <%= render :partial => 'codebook/menu' %>
+<% end %>

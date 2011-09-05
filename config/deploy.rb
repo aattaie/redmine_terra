@@ -28,13 +28,16 @@ namespace :deploy do
   task :restart, :roles => :app, :except => { :no_release => true } do
     run "#{try_sudo} touch #{File.join(current_path,'tmp','restart.txt')}"
   end
-  desc "Symlinks the database.yml"
-  task :symlink_db, :roles => :app do
+  desc "Symlinks the configuration"
+  task :symlink_config, :roles => :app do
     run "ln -nfs #{shared_path}/config/database.yml #{release_path}/config/database.yml"
+    run "ln -nfs #{shared_path}/config/configuration.yml #{release_path}/config/configuration.yml"
+    run "ln -nfs #{shared_path}/config/initializers/session_store.rb #{release_path}/config/initializers/session_store.rb"
   end
   desc "Symlinks the files"
   task :symlink_files, :roles => :app do
     run "ln -nfs #{shared_path}/files #{release_path}/files"
   end
 end
-after 'deploy:update_code', 'deploy:symlink_db'
+after 'deploy:update_code', 'deploy:symlink_config'
+after 'deploy:update_code', 'deploy:symlink_files'
