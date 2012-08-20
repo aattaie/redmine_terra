@@ -162,9 +162,10 @@ module CollectiveIdea #:nodoc:
         end
                 
         # Rebuilds the left & rights if unset or invalid.  Also very useful for converting from acts_as_tree.
-        def rebuild!
+        def rebuild!(force=false)
           # Don't rebuild a valid tree.
-          return true if valid?
+          # valid? doesn't strictly validate the tree
+          return true if !force && valid?
           
           scope = lambda{|node|}
           if acts_as_nested_set_options[:scope]
@@ -183,7 +184,7 @@ module CollectiveIdea #:nodoc:
             find(:all, :conditions => ["#{quoted_parent_column_name} = ? #{scope.call(node)}", node], :order => "#{quoted_left_column_name}, #{quoted_right_column_name}, #{acts_as_nested_set_options[:order]}").each{|n| set_left_and_rights.call(n) }
             # set right
             node[right_column_name] = indices[scope.call(node)] += 1    
-            node.save!    
+            node.save(false)
           end
                               
           # Find root node(s)
@@ -444,7 +445,7 @@ module CollectiveIdea #:nodoc:
         # Prunes a branch off of the tree, shifting all of the elements on the right
         # back to the left so the counts still work.
         def prune_from_tree
-          return if right.nil? || left.nil? || leaf? || !self.class.exists?(id)
+          return if right.nil? || left.nil? || !self.class.exists?(id)
 
           self.class.base_class.transaction do
             reload_nested_set

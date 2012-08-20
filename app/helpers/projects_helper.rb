@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Redmine - project management software
 # Copyright (C) 2006-2011  Jean-Philippe Lang
 #
@@ -28,7 +30,7 @@ module ProjectsHelper
             {:name => 'versions', :action => :manage_versions, :partial => 'projects/settings/versions', :label => :label_version_plural},
             {:name => 'categories', :action => :manage_categories, :partial => 'projects/settings/issue_categories', :label => :label_issue_category_plural},
             {:name => 'wiki', :action => :manage_wiki, :partial => 'projects/settings/wiki', :label => :label_wiki},
-            {:name => 'repository', :action => :manage_repository, :partial => 'projects/settings/repository', :label => :label_repository},
+            {:name => 'repositories', :action => :manage_repository, :partial => 'projects/settings/repositories', :label => :label_repository_plural},
             {:name => 'boards', :action => :manage_boards, :partial => 'projects/settings/boards', :label => :label_board_plural},
             {:name => 'activities', :action => :manage_project_activities, :partial => 'projects/settings/activities', :label => :enumeration_activities}
             ]
@@ -46,7 +48,7 @@ module ProjectsHelper
     options = ''
     options << "<option value=''></option>" if project.allowed_parents.include?(nil)
     options << project_tree_options_for_select(project.allowed_parents.compact, :selected => selected)
-    content_tag('select', options, :name => 'project[parent_id]', :id => 'project_parent_id')
+    content_tag('select', options.html_safe, :name => 'project[parent_id]', :id => 'project_parent_id')
   end
 
   # Renders a tree of projects as a nested set of unordered lists
@@ -80,7 +82,7 @@ module ProjectsHelper
       s << ("</li></ul>\n" * ancestors.size)
       @project = original_project
     end
-    s
+    s.html_safe
   end
 
   # Returns a set of options for a select field, grouped by project.

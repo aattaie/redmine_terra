@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Redmine - project management software
 # Copyright (C) 2006-2011  Jean-Philippe Lang
 #
@@ -37,9 +39,9 @@ module RepositoriesHelper
     unless properties.nil? || properties.empty?
       content = ''
       properties.keys.sort.each do |property|
-        content << content_tag('li', "<b>#{h property}</b>: <span>#{h properties[property]}</span>")
+        content << content_tag('li', "<b>#{h property}</b>: <span>#{h properties[property]}</span>".html_safe)
       end
-      content_tag('ul', content, :class => 'properties')
+      content_tag('ul', content.html_safe, :class => 'properties')
     end
   end
 
@@ -90,62 +92,35 @@ module RepositoriesHelper
         text = link_to(h(text), :controller => 'repositories',
                              :action => 'show',
                              :id => @project,
+                             :repository_id => @repository.identifier_param,
                              :path => path_param,
                              :rev => @changeset.identifier)
-        output << "<li class='#{style}'>#{text}</li>"
+        output << "<li class='#{style}'>#{text}"
         output << render_changes_tree(s)
+        output << "</li>"
       elsif c = tree[file][:c]
         style << " change-#{c.action}"
         path_param = to_path_param(@repository.relative_path(c.path))
         text = link_to(h(text), :controller => 'repositories',
                              :action => 'entry',
                              :id => @project,
+                             :repository_id => @repository.identifier_param,
                              :path => path_param,
                              :rev => @changeset.identifier) unless c.action == 'D'
         text << " - #{h(c.revision)}" unless c.revision.blank?
-        text << ' (' + link_to(l(:label_diff), :controller => 'repositories',
+        text << ' ('.html_safe + link_to(l(:label_diff), :controller => 'repositories',
                                        :action => 'diff',
                                        :id => @project,
+                                       :repository_id => @repository.identifier_param,
                                        :path => path_param,
-                                       :rev => @changeset.identifier) + ') ' if c.action == 'M'
-        text << ' ' + content_tag('span', h(c.from_path), :class => 'copied-from') unless c.from_path.blank?
+                                       :rev => @changeset.identifier) + ') '.html_safe if c.action == 'M'
+        text << ' '.html_safe + content_tag('span', h(c.from_path), :class => 'copied-from') unless c.from_path.blank?
         output << "<li class='#{style}'>#{text}</li>"
       end
     end
     output << '</ul>'
-    output
+    output.html_safe
   end
-
-  def to_utf8(str)
-    return str if str.nil?
-    str = to_utf8_internal(str)
-    if str.respond_to?(:force_encoding)
-      str.force_encoding('UTF-8')
-    end
-    str
-  end
-
-  def to_utf8_internal(str)
-    return str if str.nil?
-    if str.respond_to?(:force_encoding)
-      str.force_encoding('ASCII-8BIT')
-    end
-    return str if str.empty?
-    return str if /\A[\r\n\t\x20-\x7e]*\Z/n.match(str) # for us-ascii
-    if str.respond_to?(:force_encoding)
-      str.force_encoding('UTF-8')
-    end
-    @encodings ||= Setting.repositories_encodings.split(',').collect(&:strip)
-    @encodings.each do |encoding|
-      begin
-        return Iconv.conv('UTF-8', encoding, str)
-      rescue Iconv::Failure
-        # do nothing here and try the next encoding
-      end
-    end
-    str = Redmine::CodesetUtil.replace_invalid_utf8(str)
-  end
-  private :to_utf8_internal
 
   def repository_field_tags(form, repository)
     method = repository.class.name.demodulize.underscore + "_field_tags"
@@ -167,13 +142,10 @@ module RepositoriesHelper
                options_for_select(scm_options, repository.class.name.demodulize),
                :disabled => (repository && !repository.new_record?),
                :onchange => remote_function(
-                  :url => {
-                      :controller => 'repositories',
-                      :action     => 'edit',
-                      :id         => @project
-                   },
-               :method => :get,
-               :with   => "Form.serialize(this.form)")
+                 :url => new_project_repository_path(@project),
+                 :method => :get,
+                 :update => 'content',
+                 :with   => "Form.serialize(this.form)")
              )
   end
 
@@ -188,7 +160,8 @@ module RepositoriesHelper
   def subversion_field_tags(form, repository)
       content_tag('p', form.text_field(:url, :size => 60, :required => true,
                        :disabled => (repository && !repository.root_url.blank?)) +
-                       '<br />(file:///, http://, https://, svn://, svn+[tunnelscheme]://)') +
+                       '<br />'.html_safe +
+                       '(file:///, http://, https://, svn://, svn+[tunnelscheme]://)') +
       content_tag('p', form.text_field(:login, :size => 30)) +
       content_tag('p', form.password_field(
                             :password, :size => 30, :name => 'ignore',
@@ -213,12 +186,12 @@ module RepositoriesHelper
                        :size => 60, :required => true,
                        :disabled => (repository && !repository.root_url.blank?)
                          ) +
-                     '<br />' + l(:text_mercurial_repository_note)) +
+                     '<br />'.html_safe + l(:text_mercurial_repository_note)) +
     content_tag('p', form.select(
                         :path_encoding, [nil] + Setting::ENCODINGS,
                         :label => l(:field_scm_path_encoding)
                         ) +
-                     '<br />' + l(:text_scm_path_encoding_note))
+                     '<br />'.html_safe + l(:text_scm_path_encoding_note))
   end
 
   def git_field_tags(form, repository)
@@ -227,12 +200,13 @@ module RepositoriesHelper
                        :size => 60, :required => true,
                        :disabled => (repository && !repository.root_url.blank?)
                          ) +
-                      '<br />' + l(:text_git_repository_note)) +
+                      '<br />'.html_safe +
+                      l(:text_git_repository_note)) +
     content_tag('p', form.select(
                         :path_encoding, [nil] + Setting::ENCODINGS,
                         :label => l(:field_scm_path_encoding)
                         ) +
-                     '<br />' + l(:text_scm_path_encoding_note)) +
+                     '<br />'.html_safe + l(:text_scm_path_encoding_note)) +
     content_tag('p', form.check_box(
                         :extra_report_last_commit,
                         :label => l(:label_git_report_last_commit)
@@ -257,7 +231,7 @@ module RepositoriesHelper
                         :path_encoding, [nil] + Setting::ENCODINGS,
                         :label => l(:field_scm_path_encoding)
                         ) +
-                     '<br />' + l(:text_scm_path_encoding_note))
+                     '<br />'.html_safe + l(:text_scm_path_encoding_note))
   end
 
   def bazaar_field_tags(form, repository)
@@ -279,6 +253,66 @@ module RepositoriesHelper
                         :path_encoding, [nil] + Setting::ENCODINGS,
                         :label => l(:field_scm_path_encoding)
                         ) +
-                     '<br />' + l(:text_scm_path_encoding_note))
+                     '<br />'.html_safe + l(:text_scm_path_encoding_note))
+  end
+
+  def index_commits(commits, heads)
+    return nil if commits.nil? or commits.first.parents.nil?
+
+    refs_map = {}
+    heads.each do |head|
+      refs_map[head.scmid] ||= []
+      refs_map[head.scmid] << head
+    end
+
+    commits_by_scmid = {}
+    commits.reverse.each_with_index do |commit, commit_index|
+
+      commits_by_scmid[commit.scmid] = {
+        :parent_scmids => commit.parents.collect { |parent| parent.scmid },
+        :rdmid => commit_index,
+        :refs  => refs_map.include?(commit.scmid) ? refs_map[commit.scmid].join(" ") : nil,
+        :scmid => commit.scmid,
+        :href  => block_given? ? yield(commit.scmid) : commit.scmid
+      }
+    end
+
+    heads.sort! { |head1, head2| head1.to_s <=> head2.to_s }
+
+    space = nil  
+    heads.each do |head|
+      if commits_by_scmid.include? head.scmid
+        space = index_head((space || -1) + 1, head, commits_by_scmid)
+      end
+    end
+
+    # when no head matched anything use first commit
+    space ||= index_head(0, commits.first, commits_by_scmid)
+
+    return commits_by_scmid, space
+  end
+
+  def index_head(space, commit, commits_by_scmid)
+
+    stack = [[space, commits_by_scmid[commit.scmid]]]
+    max_space = space
+
+    until stack.empty?
+      space, commit = stack.pop
+      commit[:space] = space if commit[:space].nil?
+
+      space -= 1
+      commit[:parent_scmids].each_with_index do |parent_scmid, parent_index|
+
+        parent_commit = commits_by_scmid[parent_scmid]
+
+        if parent_commit and parent_commit[:space].nil?
+
+          stack.unshift [space += 1, parent_commit]
+        end
+      end
+      max_space = space if max_space < space
+    end
+    max_space
   end
 end

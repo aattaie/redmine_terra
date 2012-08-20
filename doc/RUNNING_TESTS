@@ -1,16 +1,18 @@
 Installing gems for testing
 ===========================
 
-Run `rake gems RAILS_ENV=test` to list the required gems.  Run 
-`rake gems:install RAILS_ENV=test` to install any missing gems.
+Remove your .bundle/config if you've already installed Redmine without
+the test dependencies.
+Then, run `bundle install`.
 
 Running Tests
 =============
 
 Run `rake --tasks test` to see available tests.
 `rake test` will run the entire testsuite.
+You can run `ruby test/unit/issue_test.rb` for an each test.
 
-Before running `rake test` you need to configure both development
+Before running tests, you need to configure both development
 and test databases.
 
 Creating test repositories

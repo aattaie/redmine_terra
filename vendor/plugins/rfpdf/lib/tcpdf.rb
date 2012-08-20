@@ -72,6 +72,10 @@ class TCPDF
   include Core::RFPDF
   include RFPDF::Math
   
+  def logger
+    Rails.logger
+  end
+
   cattr_accessor :k_cell_height_ratio
   @@k_cell_height_ratio = 1.25
 
@@ -279,6 +283,7 @@ class TCPDF
 		@state ||= 0
   	@tableborder ||= 0
   	@tdbegin ||= false
+	@tdtext ||= ''
   	@tdwidth ||= 0
   	@tdheight ||= 0
   	@tdalign ||= "L"
@@ -1799,7 +1804,7 @@ class TCPDF
 			w = @w - @r_margin - @x;
 		end
 
-		wmax = (w - 2 * @c_margin);
+		wmax = (w - 3 * @c_margin);
 
 		s = txt.gsub("\r", ''); # remove carriage returns
 		nb = s.length;
@@ -1858,7 +1863,7 @@ class TCPDF
 				ns += 1;
 			end
 
-			l = GetStringWidth(s[from_j, to_index - from_j + 1]);
+			l = GetStringWidth(s[from_j, to_index - from_j]);
 
 			if (l > wmax)
 				#Automatic line break
@@ -1941,7 +1946,7 @@ class TCPDF
 
 		#Output text in flowing mode
 		w = @w - @r_margin - @x;
-		wmax = (w - 2 * @c_margin);
+		wmax = (w - 3 * @c_margin);
     
 		s = txt.gsub("\r", '');
 		nb = s.length;
@@ -1970,7 +1975,7 @@ class TCPDF
 				if (nl == 1)
 					@x = @l_margin;
 					w = @w - @r_margin - @x;
-					wmax = (w - 2 * @c_margin);
+					wmax = (w - 3 * @c_margin);
 				end
 				nl += 1;
 				next
@@ -1978,7 +1983,7 @@ class TCPDF
 			if (c == " "[0])
 				sep= i;
 			end
-			l = GetStringWidth(s[j, i - j + 1]);
+			l = GetStringWidth(s[j, i - j]);
 			if (l > wmax)
 				#Automatic line break (word wrapping)
 				if (sep == -1)
@@ -1987,7 +1992,7 @@ class TCPDF
 						@x = @l_margin;
 						@y += h;
 						w=@w - @r_margin - @x;
-						wmax=(w - 2 * @c_margin);
+						wmax=(w - 3 * @c_margin);
 						i += 1
 						nl += 1
 						next
@@ -2006,7 +2011,7 @@ class TCPDF
 				if (nl==1)
 					@x = @l_margin;
 					w = @w - @r_margin - @x;
-					wmax = (w - 2 * @c_margin);
+					wmax = (w - 3 * @c_margin);
 				end
 				nl += 1;
 			else
@@ -2045,17 +2050,27 @@ class TCPDF
 		if (@images[file].nil?)
 			#First use of image, get info
 			if (type == '')
-				pos = file.rindex('.');
-				if (pos == 0)
+				pos = File::basename(file).rindex('.');
+				if (pos.nil? or pos == 0)
 					Error('Image file has no extension and no type was specified: ' + file);
 				end
+				pos = file.rindex('.');
 				type = file[pos+1..-1];
 			end
 			type.downcase!
 			if (type == 'jpg' or type == 'jpeg')
 				info=parsejpg(file);
-			elsif (type == 'png')
-				info=parsepng(file);
+			elsif (type == 'png' or type == 'gif')
+				img = Magick::ImageList.new(file)
+				img.format = "PNG"     # convert to PNG from gif 
+				img.opacity = 0        # PNG alpha channel delete
+				File.open( @@k_path_cache + File::basename(file), 'w'){|f|
+					f.binmode
+					f.print img.to_blob
+					f.close
+				}
+				info=parsepng( @@k_path_cache + File::basename(file));
+				File.delete( @@k_path_cache + File::basename(file))
 			else
 				#Allow for additional formats
 				mtd='parse' + type;
@@ -2071,15 +2086,37 @@ class TCPDF
 		end
 		#Automatic width and height calculation if needed
 		if ((w == 0) and (h == 0))
+			rescale_x = (@w - @r_margin - x) / (info['w'] / (@img_scale * @k)) 
+			rescale_x = 1 if rescale_x >= 1 
+			if (y + info['h'] * rescale_x / (@img_scale * @k) > @page_break_trigger and !@in_footer and AcceptPageBreak())
+				#Automatic page break
+				if @pages[@page+1].nil?
+					ws = @ws;
+					if (ws > 0)
+						@ws = 0;
+						out('0 Tw');
+					end
+					AddPage(@cur_orientation);
+					if (ws > 0)
+						@ws = ws;
+						out(sprintf('%.3f Tw', ws * @k));
+					end
+				else
+					@page += 1;
+				end
+				y=@t_margin;
+			end
+			rescale_y = (@page_break_trigger - y) / (info['h'] / (@img_scale * @k)) 
+			rescale_y = 1 if rescale_y >= 1 
+			rescale = rescale_y >= rescale_x ? rescale_x : rescale_y
+
 			#Put image at 72 dpi
 			# 2004-06-14 :: Nicola Asuni, scale factor where added
-			w = info['w'] / (@img_scale * @k);
-			h = info['h'] / (@img_scale * @k);
-		end
-		if (w == 0)
+			w = info['w'] * rescale / (@img_scale * @k);
+			h = info['h'] * rescale / (@img_scale * @k);
+		elsif (w == 0)
 			w = h * info['w'] / info['h'];
-		end
-		if (h == 0)
+		elsif (h == 0)
 			h = w * info['h'] / info['w'];
 		end
 		out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q', w*@k, h*@k, x*@k, (@h-(y+h))*@k, info['i']));
@@ -2842,7 +2879,7 @@ class TCPDF
 		if (a.empty?)
 			Error('Missing or incorrect image file: ' + file);
 		end
-		if (a[2]!='JPEG')
+		if (!a[2].nil? and a[2]!='JPEG')
 			Error('Not a JPEG file: ' + file);
 		end
 		if (a['channels'].nil? or a['channels']==3)
@@ -2855,9 +2892,12 @@ class TCPDF
 		bpc=!a['bits'].nil? ? a['bits'] : 8;
 		#Read whole file
 		data='';
-	  open(file,'rb') do |f|
+
+		open( @@k_path_cache + File::basename(file),'rb') do |f|
 			data<<f.read();
 		end
+		File.delete( @@k_path_cache + File::basename(file))
+
 		return {'w' => a[0],'h' => a[1],'cs' => colspace,'bpc' => bpc,'f'=>'DCTDecode','data' => data}
 	end
 
@@ -2878,11 +2918,11 @@ class TCPDF
 		end
 		w=freadint(f);
 		h=freadint(f);
-		bpc=f.read(1)[0];
+		bpc=f.read(1).unpack('C')[0];
 		if (bpc>8)
 			Error('16-bit depth not supported: ' + file);
 		end
-		ct=f.read(1)[0];
+		ct=f.read(1).unpack('C')[0];
 		if (ct==0)
 			colspace='DeviceGray';
 		elsif (ct==2)
@@ -2892,13 +2932,13 @@ class TCPDF
 		else
 			Error('Alpha channel not supported: ' + file);
 		end
-		if (f.read(1)[0] != 0)
+		if (f.read(1).unpack('C')[0] != 0)
 			Error('Unknown compression method: ' + file);
 		end
-		if (f.read(1)[0]!=0)
+		if (f.read(1).unpack('C')[0] != 0)
 			Error('Unknown filter method: ' + file);
 		end
-		if (f.read(1)[0]!=0)
+		if (f.read(1).unpack('C')[0] != 0)
 			Error('Interlacing not supported: ' + file);
 		end
 		f.read(4);
@@ -2918,9 +2958,9 @@ class TCPDF
 				#Read transparency info
 				t=f.read( n);
 				if (ct==0)
-					trns = t[1][0]
+					trns = t[1].unpack('C')[0]
 				elsif (ct==2)
-					trns = t[[1][0], t[3][0], t[5][0]]
+					trns = t[[1].unpack('C')[0], t[3].unpack('C')[0], t[5].unpack('C')[0]]
 				else
 					pos=t.include?(0.chr);
 					if (pos!=false)
@@ -3435,7 +3475,7 @@ class TCPDF
 					#Extract attributes
 					# get tag name
 					tag = element.scan(/([a-zA-Z0-9]*)/).flatten.delete_if {|x| x.length == 0}
-					tag = tag[0].downcase;
+					tag = tag[0].to_s.downcase;
 					
 					# get attributes
 					attr_array = element.scan(/([^=\s]*)=["\']?([^"\']*)["\']?/)
@@ -3458,7 +3498,7 @@ class TCPDF
 					#Extract attributes
 					# get tag name
 					tag = element.scan(/([a-zA-Z0-9]*)/).flatten.delete_if {|x| x.length == 0}
-					tag = tag[0].downcase;
+					tag = tag[0].to_s.downcase;
 					
 					# get attributes
 					attr_array = element.scan(/([^=\s]*)=["\']?([^"\']*)["\']?/)
@@ -3471,33 +3511,17 @@ class TCPDF
 				
       else
         #Text
-				if (@href)
+				if (@tdbegin)
+					element.gsub!(/[\t\r\n\f]/, "");
+					@tdtext << element.gsub(/&nbsp;/, " ");
+				elsif (@href)
 					element.gsub!(/[\t\r\n\f]/, "");
 					addHtmlLink(@href, element, fill);
-				elsif (@tdbegin)
+				elsif (@pre_state == true and element.length > 0)
+					Write(@lasth, unhtmlentities(element), '', fill);
+				elsif (element.strip.length > 0)
 					element.gsub!(/[\t\r\n\f]/, "");
 					element.gsub!(/&nbsp;/, " ");
-					base_page = @page;
-					base_x = @x;
-					base_y = @y;
-
-					MultiCell(@tdwidth, @tdheight, unhtmlentities(element.strip), @tableborder, @tdalign, @tdfill, 1);
-					tr_end = @t_cells[@table_id][@tr_id][@td_id]['j1'] + 1;
-					if @max_td_page[tr_end].nil?  or (@max_td_page[tr_end] < @page)
-						@max_td_page[tr_end] = @page
-						@max_td_y[tr_end] = @y
-					elsif (@max_td_page[tr_end] == @page)
-						@max_td_y[tr_end] = @y if @max_td_y[tr_end].nil? or (@max_td_y[tr_end] < @y) 
-					end
-
-					@page = base_page;
-					@x = base_x + @tdwidth;
-					@y = base_y;
-				elsif (element.strip.length > 0)
-					if @pre_state != true
-						element.gsub!(/[\t\r\n\f]/, "");
-						element.gsub!(/&nbsp;/, " ");
-					end
 					Write(@lasth, unhtmlentities(element), '', fill);
 				end
       end
@@ -3762,6 +3786,14 @@ class TCPDF
 	end
 
 	#
+	# Convert to accessible file path
+	# @param string :attrname image file name
+	#
+	def getImageFilename( attrname )
+		nil
+	end
+
+	#
 	# Process opening tags.
 	# @param string :tag tag name (in upcase)
 	# @param string :attr tag attribute (in upcase)
@@ -3778,6 +3810,7 @@ class TCPDF
 				@x += 5;	
 
 			when 'table'
+				Ln();
 				if @default_table_columns < @max_table_columns[@table_id]
 					@table_columns = @max_table_columns[@table_id];
 				else
@@ -3874,10 +3907,22 @@ class TCPDF
 				
 			when 'img'
 				if (!attrs['src'].nil?)
-				Write(@lasth, '!' + attrs['src'] + '!', '', fill);
-=begin Comment out. Because not implement image output yet.
-					# replace relative path with real server path
-					attrs['src'] = attrs['src'].gsub(@@k_path_url_cache, @@k_path_cache);
+					# Don't generates image inside table tag
+					if (@tdbegin)
+						@tdtext << attrs['src'];
+						return
+					end
+					# Only generates image include a pdf if RMagick is avalaible
+					unless Object.const_defined?(:Magick)
+						Write(@lasth, attrs['src'], '', fill);
+						return
+					end
+					file = getImageFilename(attrs['src'])
+					if (file.nil?)
+						Write(@lasth, attrs['src'], '', fill);
+						return
+					end
+
 					if (attrs['width'].nil?)
 						attrs['width'] = 0;
 					end
@@ -3885,10 +3930,17 @@ class TCPDF
 						attrs['height'] = 0;
 					end
 					
-					Image(attrs['src'], GetX(),GetY(), pixelsToMillimeters(attrs['width']), pixelsToMillimeters(attrs['height']));
-					#SetX(@img_rb_x);
-					SetY(@img_rb_y);
-=end
+					begin
+						Image(file, GetX(),GetY(), pixelsToMillimeters(attrs['width']), pixelsToMillimeters(attrs['height']));
+						#SetX(@img_rb_x);
+						SetY(@img_rb_y);
+					rescue => err
+						logger.error "pdf: Image: error: #{err.message}"
+						Write(@lasth, attrs['src'], '', fill);
+						if File.file?( @@k_path_cache + File::basename(file))
+							File.delete( @@k_path_cache + File::basename(file))
+						end
+					end
 				end
 				
 			when 'ul', 'ol'
@@ -4018,6 +4070,23 @@ class TCPDF
 				Ln();
 
 			when 'td','th'
+				base_page = @page;
+				base_x = @x;
+				base_y = @y;
+
+				MultiCell(@tdwidth, @tdheight, unhtmlentities(@tdtext.strip), @tableborder, @tdalign, @tdfill, 1);
+				tr_end = @t_cells[@table_id][@tr_id][@td_id]['j1'] + 1;
+				if @max_td_page[tr_end].nil?  or (@max_td_page[tr_end] < @page)
+					@max_td_page[tr_end] = @page
+					@max_td_y[tr_end] = @y
+				elsif (@max_td_page[tr_end] == @page)
+					@max_td_y[tr_end] = @y if @max_td_y[tr_end].nil? or (@max_td_y[tr_end] < @y) 
+				end
+
+				@page = base_page;
+				@x = base_x + @tdwidth;
+				@y = base_y;
+				@tdtext = '';
 				@tdbegin = false;
 				@tdwidth = 0;
 				@tdheight = 0;
@@ -4065,7 +4134,6 @@ class TCPDF
 				@l_margin -= 5;
 				@r_margin -= 5;
 				@tableborder=0;
-				Ln();
 				@table_id += 1;
 				
 			when 'strong'

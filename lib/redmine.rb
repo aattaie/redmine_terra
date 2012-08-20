@@ -13,13 +13,13 @@ require 'redmine/wiki_formatting'
 require 'redmine/scm/base'
 
 begin
-  require_library_or_gem 'RMagick' unless Object.const_defined?(:Magick)
+  require 'RMagick' unless Object.const_defined?(:Magick)
 rescue LoadError
   # RMagick is not available
 end
 
 if RUBY_VERSION < '1.9'
-  require 'faster_csv'
+  require 'fastercsv'
 else
   require 'csv'
   FCSV = CSV
@@ -52,13 +52,13 @@ Redmine::AccessControl.map do |map|
   map.permission :add_project, {:projects => [:new, :create]}, :require => :loggedin
   map.permission :edit_project, {:projects => [:settings, :edit, :update]}, :require => :member
   map.permission :select_project_modules, {:projects => :modules}, :require => :member
-  map.permission :manage_members, {:projects => :settings, :members => [:new, :edit, :destroy, :autocomplete_for_member]}, :require => :member
+  map.permission :manage_members, {:projects => :settings, :members => [:index, :show, :create, :update, :destroy, :autocomplete]}, :require => :member
   map.permission :manage_versions, {:projects => :settings, :versions => [:new, :create, :edit, :update, :close_completed, :destroy]}, :require => :member
   map.permission :add_subprojects, {:projects => [:new, :create]}, :require => :member
-  
+
   map.project_module :issue_tracking do |map|
     # Issue categories
-    map.permission :manage_categories, {:projects => :settings, :issue_categories => [:new, :edit, :destroy]}, :require => :member
+    map.permission :manage_categories, {:projects => :settings, :issue_categories => [:index, :show, :new, :create, :edit, :update, :destroy]}, :require => :member
     # Issues
     map.permission :view_issues, {:issues => [:index, :show],
                                   :auto_complete => [:issues],
@@ -67,34 +67,34 @@ Redmine::AccessControl.map do |map|
                                   :journals => [:index, :diff],
                                   :queries => :index,
                                   :reports => [:issue_report, :issue_report_details]}
-    map.permission :add_issues, {:issues => [:new, :create, :update_form]}
-    map.permission :edit_issues, {:issues => [:edit, :update, :bulk_edit, :bulk_update, :update_form], :journals => [:new]}
+    map.permission :add_issues, {:issues => [:new, :create, :update_form], :attachments => :upload}
+    map.permission :edit_issues, {:issues => [:edit, :update, :bulk_edit, :bulk_update, :update_form], :journals => [:new], :attachments => :upload}
     map.permission :manage_issue_relations, {:issue_relations => [:index, :show, :create, :destroy]}
     map.permission :manage_subtasks, {}
     map.permission :set_issues_private, {}
     map.permission :set_own_issues_private, {}, :require => :loggedin
-    map.permission :add_issue_notes, {:issues => [:edit, :update], :journals => [:new]}
+    map.permission :add_issue_notes, {:issues => [:edit, :update], :journals => [:new], :attachments => :upload}
     map.permission :edit_issue_notes, {:journals => :edit}, :require => :loggedin
     map.permission :edit_own_issue_notes, {:journals => :edit}, :require => :loggedin
-    map.permission :move_issues, {:issue_moves => [:new, :create]}, :require => :loggedin
+    map.permission :move_issues, {:issues => [:bulk_edit, :bulk_update]}, :require => :loggedin
     map.permission :delete_issues, {:issues => :destroy}, :require => :member
     # Queries
-    map.permission :manage_public_queries, {:queries => [:new, :edit, :destroy]}, :require => :member
-    map.permission :save_queries, {:queries => [:new, :edit, :destroy]}, :require => :loggedin
+    map.permission :manage_public_queries, {:queries => [:new, :create, :edit, :update, :destroy]}, :require => :member
+    map.permission :save_queries, {:queries => [:new, :create, :edit, :update, :destroy]}, :require => :loggedin
     # Watchers
     map.permission :view_issue_watchers, {}
     map.permission :add_issue_watchers, {:watchers => :new}
     map.permission :delete_issue_watchers, {:watchers => :destroy}
   end
-  
+
   map.project_module :time_tracking do |map|
-    map.permission :log_time, {:timelog => [:new, :create, :edit, :update, :bulk_edit, :bulk_update]}, :require => :loggedin
-    map.permission :view_time_entries, :timelog => [:index, :show], :time_entry_reports => [:report]
-    map.permission :edit_time_entries, {:timelog => [:new, :create, :edit, :update, :destroy, :bulk_edit, :bulk_update]}, :require => :member
-    map.permission :edit_own_time_entries, {:timelog => [:new, :create, :edit, :update, :destroy,:bulk_edit, :bulk_update]}, :require => :loggedin
+    map.permission :log_time, {:timelog => [:new, :create]}, :require => :loggedin
+    map.permission :view_time_entries, :timelog => [:index, :report, :show]
+    map.permission :edit_time_entries, {:timelog => [:edit, :update, :destroy, :bulk_edit, :bulk_update]}, :require => :member
+    map.permission :edit_own_time_entries, {:timelog => [:edit, :update, :destroy,:bulk_edit, :bulk_update]}, :require => :loggedin
     map.permission :manage_project_activities, {:project_enumerations => [:update, :destroy]}, :require => :member
   end
-  
+
   map.project_module :news do |map|
     map.permission :manage_news, {:news => [:new, :create, :edit, :update, :destroy], :comments => [:destroy]}, :require => :member
     map.permission :view_news, {:news => [:index, :show]}, :public => true
@@ -102,15 +102,15 @@ Redmine::AccessControl.map do |map|
   end
 
   map.project_module :documents do |map|
-    map.permission :manage_documents, {:documents => [:new, :edit, :destroy, :add_attachment]}, :require => :loggedin
+    map.permission :manage_documents, {:documents => [:new, :create, :edit, :update, :destroy, :add_attachment]}, :require => :loggedin
     map.permission :view_documents, :documents => [:index, :show, :download]
   end
-  
+
   map.project_module :files do |map|
     map.permission :manage_files, {:files => [:new, :create]}, :require => :loggedin
     map.permission :view_files, :files => :index, :versions => :download
   end
-    
+
   map.project_module :wiki do |map|
     map.permission :manage_wiki, {:wikis => [:edit, :destroy]}, :require => :member
     map.permission :rename_wiki_pages, {:wiki => :rename}, :require => :member
@@ -122,16 +122,17 @@ Redmine::AccessControl.map do |map|
     map.permission :delete_wiki_pages_attachments, {}
     map.permission :protect_wiki_pages, {:wiki => :protect}, :require => :member
   end
-    
+
   map.project_module :repository do |map|
-    map.permission :manage_repository, {:repositories => [:edit, :committers, :destroy]}, :require => :member
+    map.permission :manage_repository, {:repositories => [:new, :create, :edit, :update, :committers, :destroy]}, :require => :member
     map.permission :browse_repository, :repositories => [:show, :browse, :entry, :annotate, :changes, :diff, :stats, :graph]
     map.permission :view_changesets, :repositories => [:show, :revisions, :revision]
     map.permission :commit_access, {}
+    map.permission :manage_related_issues, {:repositories => [:add_related_issue, :remove_related_issue]}
   end
 
   map.project_module :boards do |map|
-    map.permission :manage_boards, {:boards => [:new, :edit, :destroy]}, :require => :member
+    map.permission :manage_boards, {:boards => [:new, :create, :edit, :update, :destroy]}, :require => :member
     map.permission :view_messages, {:boards => [:index, :show], :messages => [:show]}, :public => true
     map.permission :add_messages, {:messages => [:new, :reply, :quote]}
     map.permission :edit_messages, {:messages => :edit}, :require => :member
@@ -181,7 +182,7 @@ Redmine::MenuManager.map :admin_menu do |menu|
             :html => {:class => 'custom_fields'}
   menu.push :enumerations, {:controller => 'enumerations'}
   menu.push :settings, {:controller => 'settings'}
-  menu.push :ldap_authentication, {:controller => 'ldap_auth_sources', :action => 'index'},
+  menu.push :ldap_authentication, {:controller => 'auth_sources', :action => 'index'},
             :html => {:class => 'server_authentication'}
   menu.push :plugins, {:controller => 'admin', :action => 'plugins'}, :last => true
   menu.push :info, {:controller => 'admin', :action => 'info'}, :caption => :label_information_plural, :last => true

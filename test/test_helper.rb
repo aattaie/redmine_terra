@@ -18,8 +18,7 @@
 ENV["RAILS_ENV"] = "test"
 require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
 require 'test_help'
-require File.expand_path(File.dirname(__FILE__) + '/helper_testcase')
-require Rails.root.join('test', 'mocks', 'open_id_authentication_mock.rb')
+require Rails.root.join('test', 'mocks', 'open_id_authentication_mock.rb').to_s
 
 require File.expand_path(File.dirname(__FILE__) + '/object_daddy_helpers')
 include ObjectDaddyHelpers
@@ -47,7 +46,7 @@ class ActiveSupport::TestCase
   self.use_instantiated_fixtures  = false
 
   # Add more helper methods to be used by all tests here...
-  
+
   def log_user(login, password)
     User.anonymous
     get "/login"
@@ -57,9 +56,14 @@ class ActiveSupport::TestCase
     post "/login", :username => login, :password => password
     assert_equal login, User.find(session[:user_id]).login
   end
-  
+
   def uploaded_test_file(name, mime)
-    ActionController::TestUploadedFile.new(ActiveSupport::TestCase.fixture_path + "/files/#{name}", mime, true)
+    ActionController::TestUploadedFile.new(
+      ActiveSupport::TestCase.fixture_path + "/files/#{name}", mime, true)
+  end
+
+  def credentials(user, password=nil)
+    {:authorization => ActionController::HttpAuthentication::Basic.encode_credentials(user, password || user)}
   end
 
   # Mock out a file
@@ -76,6 +80,17 @@ class ActiveSupport::TestCase
     self.class.mock_file
   end
 
+  def mock_file_with_options(options={})
+    file = ''
+    file.stubs(:size).returns(32)
+    original_filename = options[:original_filename] || nil
+    file.stubs(:original_filename).returns(original_filename)
+    content_type = options[:content_type] || nil
+    file.stubs(:content_type).returns(content_type)
+    file.stubs(:read).returns(false)
+    file
+  end
+
   # Use a temporary directory for attachment related tests
   def set_tmp_attachments_directory
     Dir.mkdir "#{Rails.root}/tmp/test" unless File.directory?("#{Rails.root}/tmp/test")
@@ -85,12 +100,16 @@ class ActiveSupport::TestCase
     Attachment.storage_path = "#{Rails.root}/tmp/test/attachments"
   end
 
+  def set_fixtures_attachments_directory
+    Attachment.storage_path = "#{Rails.root}/test/fixtures/files"
+  end
+
   def with_settings(options, &block)
-    saved_settings = options.keys.inject({}) {|h, k| h[k] = Setting[k].dup; h}
+    saved_settings = options.keys.inject({}) {|h, k| h[k] = Setting[k].is_a?(Symbol) ? Setting[k] : Setting[k].dup; h}
     options.each {|k, v| Setting[k] = v}
     yield
   ensure
-    saved_settings.each {|k, v| Setting[k] = v}
+    saved_settings.each {|k, v| Setting[k] = v} if saved_settings
   end
 
   def change_user_password(login, new_password)
@@ -124,12 +143,43 @@ class ActiveSupport::TestCase
     File.directory?(repository_path(vendor))
   end
 
+  def repository_path_hash(arr)
+    hs = {}
+    hs[:path]  = arr.join("/")
+    hs[:param] = arr
+    hs
+  end
+
   def assert_error_tag(options={})
     assert_tag({:attributes => { :id => 'errorExplanation' }}.merge(options))
   end
-  
+
   def assert_include(expected, s)
     assert s.include?(expected), "\"#{expected}\" not found in \"#{s}\""
+  end
+
+  def assert_not_include(expected, s)
+    assert !s.include?(expected), "\"#{expected}\" found in \"#{s}\""
+  end
+
+  def assert_mail_body_match(expected, mail)
+    if expected.is_a?(String)
+      assert_include expected, mail_body(mail)
+    else
+      assert_match expected, mail_body(mail)
+    end
+  end
+
+  def assert_mail_body_no_match(expected, mail)
+    if expected.is_a?(String)
+      assert_not_include expected, mail_body(mail)
+    else
+      assert_no_match expected, mail_body(mail)
+    end
+  end
+
+  def mail_body(mail)
+    mail.body
   end
 
   # Shoulda macros
@@ -176,7 +226,7 @@ class ActiveSupport::TestCase
                                           :old_value => @old_value.id,
                                           :value => @new_value.id,
                                           :prop_key => prop_key)
-        
+
         assert_match @new_value.name, show_detail(@detail, true)
       end
 
@@ -185,18 +235,9 @@ class ActiveSupport::TestCase
                                           :old_value => @old_value.id,
                                           :value => @new_value.id,
                                           :prop_key => prop_key)
-        
+
         assert_match @old_value.name, show_detail(@detail, true)
       end
-    end
-  end
-
-  def self.should_create_a_new_user(&block)
-    should "create a new user" do
-      user = instance_eval &block
-      assert user
-      assert_kind_of User, user
-      assert !user.new_record?
     end
   end
 
@@ -229,15 +270,14 @@ class ActiveSupport::TestCase
   def self.should_allow_http_basic_auth_with_username_and_password(http_method, url, parameters={}, options={})
     success_code = options[:success_code] || :success
     failure_code = options[:failure_code] || :unauthorized
-    
+
     context "should allow http basic auth using a username and password for #{http_method} #{url}" do
       context "with a valid HTTP authentication" do
         setup do
           @user = User.generate_with_protected!(:password => 'my_password', :password_confirmation => 'my_password', :admin => true) # Admin so they can access the project
-          @authorization = ActionController::HttpAuthentication::Basic.encode_credentials(@user.login, 'my_password')
-          send(http_method, url, parameters, {:authorization => @authorization})
+          send(http_method, url, parameters, credentials(@user.login, 'my_password'))
         end
-        
+
         should_respond_with success_code
         should_respond_with_content_type_based_on_url(url)
         should "login as the user" do
@@ -248,20 +288,19 @@ class ActiveSupport::TestCase
       context "with an invalid HTTP authentication" do
         setup do
           @user = User.generate_with_protected!
-          @authorization = ActionController::HttpAuthentication::Basic.encode_credentials(@user.login, 'wrong_password')
-          send(http_method, url, parameters, {:authorization => @authorization})
+          send(http_method, url, parameters, credentials(@user.login, 'wrong_password'))
         end
-        
+
         should_respond_with failure_code
         should_respond_with_content_type_based_on_url(url)
         should "not login as the user" do
           assert_equal User.anonymous, User.current
         end
       end
-      
+
       context "without credentials" do
         setup do
-          send(http_method, url, parameters, {:authorization => ''})
+          send(http_method, url, parameters)
         end
 
         should_respond_with failure_code
@@ -291,10 +330,9 @@ class ActiveSupport::TestCase
         setup do
           @user = User.generate_with_protected!(:admin => true)
           @token = Token.generate!(:user => @user, :action => 'api')
-          @authorization = ActionController::HttpAuthentication::Basic.encode_credentials(@token.value, 'X')
-          send(http_method, url, parameters, {:authorization => @authorization})
+          send(http_method, url, parameters, credentials(@token.value, 'X'))
         end
-        
+
         should_respond_with success_code
         should_respond_with_content_type_based_on_url(url)
         should_be_a_valid_response_string_based_on_url(url)
@@ -307,8 +345,7 @@ class ActiveSupport::TestCase
         setup do
           @user = User.generate_with_protected!
           @token = Token.generate!(:user => @user, :action => 'feeds')
-          @authorization = ActionController::HttpAuthentication::Basic.encode_credentials(@token.value, 'X')
-          send(http_method, url, parameters, {:authorization => @authorization})
+          send(http_method, url, parameters, credentials(@token.value, 'X'))
         end
 
         should_respond_with failure_code
@@ -319,7 +356,7 @@ class ActiveSupport::TestCase
       end
     end
   end
-  
+
   # Test that a request allows full key authentication
   #
   # @param [Symbol] http_method the HTTP method for request (:get, :post, :put, :delete)
@@ -345,7 +382,7 @@ class ActiveSupport::TestCase
                         end
           send(http_method, request_url, parameters)
         end
-        
+
         should_respond_with success_code
         should_respond_with_content_type_based_on_url(url)
         should_be_a_valid_response_string_based_on_url(url)
@@ -366,7 +403,7 @@ class ActiveSupport::TestCase
                         end
           send(http_method, request_url, parameters)
         end
-        
+
         should_respond_with failure_code
         should_respond_with_content_type_based_on_url(url)
         should "not login as the user" do
@@ -374,14 +411,14 @@ class ActiveSupport::TestCase
         end
       end
     end
-    
+
     context "should allow key based auth using X-Redmine-API-Key header for #{http_method} #{url}" do
       setup do
         @user = User.generate_with_protected!(:admin => true)
         @token = Token.generate!(:user => @user, :action => 'api')
         send(http_method, url, parameters, {'X-Redmine-API-Key' => @token.value.to_s})
       end
-      
+
       should_respond_with success_code
       should_respond_with_content_type_based_on_url(url)
       should_be_a_valid_response_string_based_on_url(url)
@@ -406,7 +443,7 @@ class ActiveSupport::TestCase
     else
       raise "Unknown content type for should_respond_with_content_type_based_on_url: #{url}"
     end
-    
+
   end
 
   # Uses the url to assert which format the response should be in
@@ -424,9 +461,9 @@ class ActiveSupport::TestCase
     else
       raise "Unknown content type for should_be_a_valid_response_based_on_url: #{url}"
     end
-    
+
   end
-  
+
   # Checks that the response is a valid JSON string
   def self.should_be_a_valid_json_string
     should "be a valid JSON string (or empty)" do
@@ -440,9 +477,17 @@ class ActiveSupport::TestCase
       assert REXML::Document.new(response.body)
     end
   end
-  
+
 end
 
 # Simple module to "namespace" all of the API tests
 module ApiTest
+end
+
+module ActionController
+  class TestUploadedFile
+    def respond_to?(method_name)
+      @tempfile.respond_to?(method_name) || super
+    end
+  end
 end

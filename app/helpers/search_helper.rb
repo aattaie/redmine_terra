@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # Redmine - project management software
 # Copyright (C) 2006-2011  Jean-Philippe Lang
 #
@@ -19,7 +21,7 @@ module SearchHelper
   def highlight_tokens(text, tokens)
     return text unless text && tokens && !tokens.empty?
     re_tokens = tokens.collect {|t| Regexp.escape(t)}
-    regexp = Regexp.new "(#{re_tokens.join('|')})", Regexp::IGNORECASE    
+    regexp = Regexp.new "(#{re_tokens.join('|')})", Regexp::IGNORECASE
     result = ''
     text.split(regexp).each_with_index do |words, i|
       if result.length > 1200
@@ -35,7 +37,7 @@ module SearchHelper
         result << content_tag('span', h(words), :class => "highlight token-#{t}")
       end
     end
-    result
+    result.html_safe
   end
 
   def type_label(t)
@@ -47,6 +49,7 @@ module SearchHelper
     options << [l(:label_my_projects), 'my_projects'] unless User.current.memberships.empty?
     options << [l(:label_and_its_subprojects, @project.name), 'subprojects'] unless @project.nil? || @project.descendants.active.empty?
     options << [@project.name, ''] unless @project.nil?
+    label_tag("scope", l(:description_project_scope), :class => "hidden-for-sighted") +
     select_tag('scope', options_for_select(options, params[:scope].to_s)) if options.size > 1
   end
 
@@ -60,6 +63,8 @@ module SearchHelper
       links << link_to(h(text), :q => params[:q], :titles_only => params[:titles_only],
                        :all_words => params[:all_words], :scope => params[:scope], t => 1)
     end
-    ('<ul>' + links.map {|link| content_tag('li', link)}.join(' ') + '</ul>') unless links.empty?
+    ('<ul>'.html_safe +
+        links.map {|link| content_tag('li', link)}.join(' ').html_safe + 
+        '</ul>'.html_safe) unless links.empty?
   end
 end

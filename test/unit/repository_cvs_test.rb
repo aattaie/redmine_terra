@@ -20,6 +20,8 @@ require 'pp'
 class RepositoryCvsTest < ActiveSupport::TestCase
   fixtures :projects
 
+  include Redmine::I18n
+
   REPOSITORY_PATH = Rails.root.join('tmp/test/cvs_repository').to_s
   REPOSITORY_PATH.gsub!(/\//, "\\") if Redmine::Platform.mswin?
   # CVS module
@@ -35,11 +37,69 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     assert @repository
   end
 
+  def test_blank_module_error_message
+    set_language_if_valid 'en'
+    repo = Repository::Cvs.new(
+                          :project      => @project,
+                          :identifier   => 'test',
+                          :log_encoding => 'UTF-8',
+                          :root_url     => REPOSITORY_PATH
+                        )
+    assert !repo.save
+    assert_include "Module can't be blank",
+                   repo.errors.full_messages
+  end
+
+  def test_blank_module_error_message_fr
+    set_language_if_valid 'fr'
+    str = "Module doit \xc3\xaatre renseign\xc3\xa9(e)"
+    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    repo = Repository::Cvs.new(
+                          :project       => @project,
+                          :identifier    => 'test',
+                          :log_encoding  => 'UTF-8',
+                          :path_encoding => '',
+                          :url           => '',
+                          :root_url      => REPOSITORY_PATH
+                        )
+    assert !repo.save
+    assert_include str, repo.errors.full_messages
+  end
+
+  def test_blank_cvsroot_error_message
+    set_language_if_valid 'en'
+    repo = Repository::Cvs.new(
+                          :project      => @project,
+                          :identifier   => 'test',
+                          :log_encoding => 'UTF-8',
+                          :url          => MODULE_NAME
+                        )
+    assert !repo.save
+    assert_include "CVSROOT can't be blank",
+                   repo.errors.full_messages
+  end
+
+  def test_blank_cvsroot_error_message_fr
+    set_language_if_valid 'fr'
+    str = "CVSROOT doit \xc3\xaatre renseign\xc3\xa9(e)"
+    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    repo = Repository::Cvs.new(
+                          :project       => @project,
+                          :identifier    => 'test',
+                          :log_encoding  => 'UTF-8',
+                          :path_encoding => '',
+                          :url           => MODULE_NAME,
+                          :root_url      => ''
+                        )
+    assert !repo.save
+    assert_include str, repo.errors.full_messages
+  end
+
   if File.directory?(REPOSITORY_PATH)
     def test_fetch_changesets_from_scratch
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
 
       assert_equal CHANGESETS_NUM, @repository.changesets.count
       assert_equal 16, @repository.changes.count
@@ -52,11 +112,14 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     def test_fetch_changesets_incremental
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
+
       # Remove changesets with revision > 3
       @repository.changesets.find(:all).each {|c| c.destroy if c.revision.to_i > 3}
-      @repository.reload
+      @project.reload
       assert_equal 3, @repository.changesets.count
-      assert_equal %w|3 2 1|, @repository.changesets.collect(&:revision)
+      assert_equal %w|3 2 1|, @repository.changesets.all.collect(&:revision)
 
       rev3_commit = @repository.changesets.find(:first, :order => 'committed_on DESC')
       assert_equal '3', rev3_commit.revision
@@ -68,10 +131,9 @@ class RepositoryCvsTest < ActiveSupport::TestCase
       assert_equal rev3_committed_on, latest_rev.committed_on
 
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
       assert_equal CHANGESETS_NUM, @repository.changesets.count
-
-      assert_equal %w|7 6 5 4 3 2 1|, @repository.changesets.collect(&:revision)
+      assert_equal %w|7 6 5 4 3 2 1|, @repository.changesets.all.collect(&:revision)
       rev5_commit = @repository.changesets.find_by_revision('5')
       assert_equal 'HEAD-20071213-163001', rev5_commit.scmid
        # 2007-12-14 01:30:01 +0900
@@ -82,7 +144,7 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     def test_deleted_files_should_not_be_listed
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
       assert_equal CHANGESETS_NUM, @repository.changesets.count
 
       entries = @repository.entries('sources')
@@ -91,8 +153,10 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     end
 
     def test_entries_rev3
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
       entries = @repository.entries('', '3')
       assert_equal 3, entries.size
       assert_equal entries[2].name, "README"
@@ -103,21 +167,27 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     end
 
     def test_entries_invalid_path
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
       assert_nil @repository.entries('missing')
       assert_nil @repository.entries('missing', '3')
     end
 
     def test_entries_invalid_revision
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
       assert_nil @repository.entries('', '123')
     end
 
     def test_cat
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
       buf = @repository.cat('README')
       assert buf
       lines = buf.split("\n")
@@ -141,8 +211,10 @@ class RepositoryCvsTest < ActiveSupport::TestCase
     end
 
     def test_annotate
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal CHANGESETS_NUM, @repository.changesets.count
       ann = @repository.annotate('README')
       assert ann
       assert_equal 3, ann.revisions.length

@@ -1,24 +1,24 @@
 # Redmine - project management software
-# Copyright (C) 2006-2009  Jean-Philippe Lang
+# Copyright (C) 2006-2011  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class AccountController < ApplicationController
   helper :custom_fields
-  include CustomFieldsHelper   
-  
+  include CustomFieldsHelper
+
   # prevents login action to be filtered by check_if_login_required application scope filter
   skip_before_filter :check_if_login_required
 
@@ -29,6 +29,9 @@ class AccountController < ApplicationController
     else
       authenticate_user
     end
+  rescue AuthSourceException => e
+    logger.error "An error occured when authenticating #{params[:username]}: #{e.message}"
+    render_error :message => e.message
   end
 
   # Log out current user and redirect to welcome page
@@ -36,7 +39,7 @@ class AccountController < ApplicationController
     logout_user
     redirect_to home_url
   end
-  
+
   # Enable user to choose a new password
   def lost_password
     redirect_to(home_url) && return unless Setting.lost_password?
@@ -51,7 +54,7 @@ class AccountController < ApplicationController
           flash[:notice] = l(:notice_account_password_updated)
           redirect_to :action => 'login'
           return
-        end 
+        end
       end
       render :template => "account/password_recovery"
       return
@@ -73,7 +76,7 @@ class AccountController < ApplicationController
       end
     end
   end
-  
+
   # User self-registration
   def register
     redirect_to(home_url) && return unless Setting.self_registration? || session[:auth_source_registration]
@@ -81,7 +84,8 @@ class AccountController < ApplicationController
       session[:auth_source_registration] = nil
       @user = User.new(:language => Setting.default_language)
     else
-      @user = User.new(params[:user])
+      @user = User.new
+      @user.safe_attributes = params[:user]
       @user.admin = false
       @user.register
       if session[:auth_source_registration]
@@ -96,7 +100,7 @@ class AccountController < ApplicationController
         end
       else
         @user.login = params[:user][:login]
-        @user.password, @user.password_confirmation = params[:password], params[:password_confirmation]
+        @user.password, @user.password_confirmation = params[:user][:password], params[:user][:password_confirmation]
 
         case Setting.self_registration
         when '1'
@@ -109,7 +113,7 @@ class AccountController < ApplicationController
       end
     end
   end
-  
+
   # Token based account activation
   def activate
     redirect_to(home_url) && return unless Setting.self_registration? && params[:token]
@@ -124,17 +128,9 @@ class AccountController < ApplicationController
     end
     redirect_to :action => 'login'
   end
-  
+
   private
-  
-  def logout_user
-    if User.current.logged?
-      cookies.delete :autologin
-      Token.delete_all(["user_id = ? AND action = ?", User.current.id, 'autologin'])
-      self.logged_user = nil
-    end
-  end
-  
+
   def authenticate_user
     if Setting.openid? && using_open_id?
       open_id_authenticate(params[:openid_url])
@@ -156,7 +152,6 @@ class AccountController < ApplicationController
     end
   end
 
-  
   def open_id_authenticate(openid_url)
     authenticate_with_open_id(openid_url, :required => [:nickname, :fullname, :email], :return_to => signin_url) do |result, identity_url, registration|
       if result.successful?
@@ -185,7 +180,7 @@ class AccountController < ApplicationController
             register_manually_by_administrator(user) do
               onthefly_creation_failed(user)
             end
-          end          
+          end
         else
           # Existing record
           if user.active?
@@ -197,7 +192,7 @@ class AccountController < ApplicationController
       end
     end
   end
-  
+
   def successful_authentication(user)
     # Valid user
     self.logged_user = user
@@ -208,7 +203,7 @@ class AccountController < ApplicationController
     call_hook(:controller_account_success_authentication_after, {:user => user })
     redirect_back_or_default :controller => 'my', :action => 'page'
   end
-  
+
   def set_autologin_cookie(user)
     token = Token.create(:user => user, :action => 'autologin')
     cookie_name = Redmine::Configuration['autologin_cookie_name'] || 'autologin'
@@ -247,7 +242,7 @@ class AccountController < ApplicationController
       yield if block_given?
     end
   end
-  
+
   # Automatically register a user
   #
   # Pass a block for behavior when a user fails to save
@@ -263,7 +258,7 @@ class AccountController < ApplicationController
       yield if block_given?
     end
   end
-  
+
   # Manual activation by the administrator
   #
   # Pass a block for behavior when a user fails to save

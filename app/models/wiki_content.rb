@@ -1,5 +1,5 @@
-# RedMine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Redmine - project management software
+# Copyright (C) 2006-2012  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,6 +45,11 @@ class WikiContent < ActiveRecord::Base
     notified.collect(&:mail)
   end
 
+  # Return true if the content is the current page content
+  def current_version?
+    true
+  end
+
   class Version
     belongs_to :page, :class_name => '::WikiPage', :foreign_key => 'page_id'
     belongs_to :author, :class_name => '::User', :foreign_key => 'author_id'
@@ -86,17 +91,26 @@ class WikiContent < ActiveRecord::Base
     end
 
     def text
-      @text ||= case compression
-      when 'gzip'
-         Zlib::Inflate.inflate(data)
-      else
-        # uncompressed data
-        data
+      @text ||= begin
+        str = case compression
+              when 'gzip'
+                Zlib::Inflate.inflate(data)
+              else
+                # uncompressed data
+                data
+              end
+        str.force_encoding("UTF-8") if str.respond_to?(:force_encoding)
+        str
       end
     end
 
     def project
       page.project
+    end
+
+    # Return true if the content is the current page content
+    def current_version?
+      page.content.version == self.version
     end
 
     # Returns the previous version or nil

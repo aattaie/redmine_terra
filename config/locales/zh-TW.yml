@@ -1,4 +1,4 @@
-# Chinese (Taiwan) translations for Ruby on Rails 
+# Chinese (Taiwan) translations for Ruby on Rails
 # by tsechingho (http://github.com/tsechingho)
 # See http://github.com/svenfuchs/rails-i18n/ for details.
 
@@ -24,7 +24,7 @@
       - :year
       - :month
       - :day
-  
+
   time:
     formats:
       default: "%Y年%b%d日 %A %H:%M:%S %Z"
@@ -69,9 +69,9 @@
     percentage:
       format:
         # 下列三個選項設定, 若有設定值將會取代 number.format 成為預設值
-        # separator: 
+        # separator:
         delimiter: ""
-        # precision: 
+        # precision:
 
     # 使用於 number_to_precision()
     precision:
@@ -79,13 +79,13 @@
         # 下列三個選項設定, 若有設定值將會取代 number.format 成為預設值
         # separator:
         delimiter: ""
-        # precision: 
+        # precision:
 
     # 使用於 number_to_human_size()
     human:
       format:
         # 下列三個選項設定, 若有設定值將會取代 number.format 成為預設值
-        # separator: 
+        # separator:
         delimiter: ""
         precision: 1
         # 儲存單位輸出格式.
@@ -120,6 +120,9 @@
       about_x_hours:
         one: "約 1 小時"
         other: "約 %{count} 小時"
+      x_hours:
+        one:   "1 hour"
+        other: "%{count} hours"
       x_days:
         one: "1 天"
         other: "%{count} 天"
@@ -149,7 +152,7 @@
   activerecord:
     errors:
       template:
-        header: 
+        header:
           one:   "有 1 個錯誤發生使得「%{model}」無法被儲存。"
           other: "有 %{count} 個錯誤發生使得「%{model}」無法被儲存。"
         # The variable :count is also available
@@ -192,16 +195,16 @@
       #       attributes:
       #         login:
       #           blank: "This is a custom blank message for User login"
-      # Will define custom blank validation message for User model and 
+      # Will define custom blank validation message for User model and
       # custom blank validation message for login attribute of User model.
       #models:
-        
+
     # Translate model names. Used in Model.human_name().
     #models:
       # For example,
       #   user: "Dude"
       # will translate User model name to "Dude"
-    
+
     # Translate model attribute names. Used in Model.human_attribute_name(attribute).
     #attributes:
       # For example,
@@ -210,7 +213,7 @@
       # will translate User attribute "login" as "Handle"
 
   actionview_instancetag_blank_option: 請選擇
-  
+
   general_text_No: '否'
   general_text_Yes: '是'
   general_text_no: '否'
@@ -221,7 +224,7 @@
   general_csv_encoding: Big5
   general_pdf_encoding: Big5
   general_first_day_of_week: '7'
-  
+
   notice_account_updated: 帳戶更新資訊已儲存
   notice_account_invalid_creditentials: 帳戶或密碼不正確
   notice_account_password_updated: 帳戶新密碼已儲存
@@ -243,7 +246,8 @@
   notice_email_error: "寄送郵件的過程中發生錯誤 (%{value})"
   notice_feeds_access_key_reseted: 您的 RSS 存取金鑰已被重新設定。
   notice_api_access_key_reseted: 您的 API 存取金鑰已被重新設定。
-  notice_failed_to_save_issues: " %{count} 個問題儲存失敗（總共選取 %{total} 個問題）： %{ids} 。"
+  notice_failed_to_save_issues: "無法儲存 %{count} 問題到下列所選取的 %{total} 個項目中： %{ids}。"
+  notice_failed_to_save_time_entries: "無法儲存 %{count} 個工時到下列所選取的 %{total} 個項目中： %{ids}。"
   notice_failed_to_save_members: "成員儲存失敗: %{errors}."
   notice_no_issue_selected: "未選擇任何問題！請勾選您想要編輯的問題。"
   notice_account_pending: "您的帳號已經建立，正在等待管理員的審核。"
@@ -253,11 +257,14 @@
   notice_issue_done_ratios_updated: 問題完成百分比已更新。
   notice_gantt_chart_truncated: "由於項目數量超過可顯示數量的最大值 (%{max})，故此甘特圖尾部已被截斷"
   notice_issue_successful_create: "問題 %{id} 已建立。"
+  notice_issue_update_conflict: "當您正在編輯這個問題的時候，它已經被其他人搶先一步更新過。"
+  notice_account_deleted: "您的帳戶已被永久刪除。"
 
   error_can_t_load_default_data: "無法載入預設組態： %{value}"
   error_scm_not_found: "在儲存機制中找不到這個項目或修訂版。"
   error_scm_command_failed: "嘗試存取儲存機制時發生錯誤： %{value}"
   error_scm_annotate: "項目不存在或項目無法被加上附註。"
+  error_scm_annotate_big_text_file: 此項目無法被標註，因為它已經超過最大的文字檔大小。
   error_issue_not_found_in_project: '該問題不存在或不屬於此專案'
   error_no_tracker_in_project: '此專案尚未指定追蹤標籤。請檢查專案的設定資訊。'
   error_no_default_issue_status: '尚未定義問題狀態的預設值。請您前往「網站管理」->「問題狀態清單」頁面，檢查相關組態設定。'
@@ -271,8 +278,10 @@
   error_workflow_copy_target: '請選擇一個（或多個）目的問題追蹤標籤或角色'
   error_unable_delete_issue_status: '無法刪除問題狀態'
   error_unable_to_connect: "無法連線至（%{value}）"
+  error_attachment_too_big: "這個檔案無法被上傳，因為它已經超過最大的檔案大小 (%{max_size})"
+  error_session_expired: "您的工作階段已經過期。請重新登入。"
   warning_attachments_not_saved: "%{count} 個附加檔案無法被儲存。"
-  
+
   mail_subject_lost_password: 您的 Redmine 網站密碼
   mail_body_lost_password: '欲變更您的 Redmine 網站密碼, 請點選以下鏈結:'
   mail_subject_register: 啟用您的 Redmine 帳號
@@ -287,10 +296,10 @@
   mail_body_wiki_content_added: "此 '%{id}' wiki 頁面已被 %{author} 新增。"
   mail_subject_wiki_content_updated: "'%{id}' wiki 頁面已被更新"
   mail_body_wiki_content_updated: "此 '%{id}' wiki 頁面已被 %{author} 更新。"
-  
+
   gui_validation_error: 1 個錯誤
   gui_validation_error_plural: "%{count} 個錯誤"
-  
+
   field_name: 名稱
   field_description: 概述
   field_summary: 摘要
@@ -397,7 +406,10 @@
   field_root_directory: 根資料夾
   field_cvsroot: CVSROOT
   field_cvs_module: 模組
-  
+  field_repository_is_default: 主要儲存機制
+  field_multiple: 多重值
+  field_ldap_filter: LDAP 篩選器
+
   setting_app_title: 標題
   setting_app_subtitle: 副標題
   setting_welcome_text: 歡迎詞
@@ -423,7 +435,7 @@
   setting_time_format: 時間格式
   setting_cross_project_issue_relations: 允許關聯至其它專案的問題
   setting_issue_list_default_columns: 預設顯示於問題清單的欄位
-  setting_repositories_encodings: 版本庫編碼
+  setting_repositories_encodings: 附加檔案與儲存機制的編碼
   setting_emails_header: 電子郵件前頭說明
   setting_emails_footer: 電子郵件附帶說明
   setting_protocol: 協定
@@ -456,7 +468,12 @@
   setting_commit_logtime_activity_id: 時間記錄對應的活動
   setting_gantt_items_limit: 甘特圖中項目顯示數量的最大值
   setting_issue_group_assignment: 允許問題被指派至群組
-  
+  setting_default_issue_start_date_to_creation_date: 設定新問題的起始日期為今天的日期
+  setting_commit_cross_project_ref: 允許關聯並修正其他專案的問題
+  setting_unsubscribe: 允許用戶取消註冊（刪除帳戶）
+  setting_session_lifetime: 工作階段存留時間最大值
+  setting_session_timeout: 工作階段無活動逾時時間
+
   permission_add_project: 建立專案
   permission_add_subprojects: 建立子專案
   permission_edit_project: 編輯專案
@@ -514,7 +531,8 @@
   permission_delete_own_messages: 刪除自己的訊息
   permission_export_wiki_pages: 匯出 wiki 頁面
   permission_manage_subtasks: 管理子任務
-  
+  permission_manage_related_issues: 管理相關問題
+
   project_module_issue_tracking: 問題追蹤
   project_module_time_tracking: 工時追蹤
   project_module_news: 新聞
@@ -525,7 +543,7 @@
   project_module_boards: 討論區
   project_module_calendar: 日曆
   project_module_gantt: 甘特圖
-  
+
   label_user: 用戶
   label_user_plural: 用戶清單
   label_user_new: 建立新用戶
@@ -664,6 +682,10 @@
     zero:  0 已結束
     one:   1 已結束
     other: "%{count} 已結束"
+  label_x_issues:
+    zero:  0 個問題
+    one:   1 個問題
+    other: "%{count} 個問題"
   label_total: 總計
   label_permissions: 權限
   label_current_status: 目前狀態
@@ -724,12 +746,13 @@
   label_not_contains: 不包含
   label_day_plural: 天
   label_repository: 儲存機制
+  label_repository_new: 建立新儲存機制
   label_repository_plural: 儲存機制清單
   label_browse: 瀏覽
   label_modification: "%{count} 變更"
   label_modification_plural: "%{count} 變更"
   label_branch: 分支
-  label_tag: 標籤 
+  label_tag: 標籤
   label_revision: 修訂版
   label_revision_plural: 修訂版清單
   label_revision_id: "修訂版 %{value}"
@@ -777,6 +800,7 @@
   label_commits_per_month: 依月份統計認可
   label_commits_per_author: 依作者統計認可
   label_view_diff: 檢視差異
+  label_diff: 差異
   label_diff_inline: 直列
   label_diff_side_by_side: 並排
   label_options: 選項清單
@@ -904,6 +928,14 @@
   label_issues_visibility_public: 所有非私人問題
   label_issues_visibility_own: 使用者所建立的或被指派的問題
   label_git_report_last_commit: 報告最後認可的文件和目錄
+  label_parent_revision: 父項
+  label_child_revision: 子項
+  label_export_options: "%{export_format} 匯出選項"
+  label_copy_attachments: 複製附件
+  label_item_position: "%{position} / %{count}"
+  label_completed_versions: 已完成版本
+  label_search_for_watchers: 搜尋可供加入的監看者
+  label_session_expiration: 工作階段逾期
 
   button_login: 登入
   button_submit: 送出
@@ -951,17 +983,20 @@
   button_quote: 引用
   button_duplicate: 重製
   button_show: 顯示
-  
+  button_edit_section: 編輯此區塊
+  button_export: 匯出
+  button_delete_my_account: 刪除我的帳戶
+
   status_active: 活動中
   status_registered: 註冊完成
   status_locked: 鎖定中
-  
+
   version_status_open: 進行中
   version_status_locked: 已鎖定
   version_status_closed: 已結束
-  
+
   field_active: 活動中
-  
+
   text_select_mail_notifications: 選擇欲寄送提醒通知郵件之動作
   text_regexp_info: eg. ^[A-Z0-9]+$
   text_min_max_length_info: 0 代表「不限制」
@@ -978,7 +1013,7 @@
   text_tip_issue_begin_day: 今天起始的問題
   text_tip_issue_end_day: 今天截止的的問題
   text_tip_issue_begin_end_day: 今天起始與截止的問題
-  text_project_identifier_info: '只允許小寫英文字母（a-z）、阿拉伯數字與連字符號（-）。<br />儲存後，代碼不可再被更改。'
+  text_project_identifier_info: '僅允許使用小寫英文字母 (a-z), 阿拉伯數字, 虛線與底線。<br />一旦儲存之後, 代碼便無法再次被更改。'
   text_caracters_maximum: "最多 %{count} 個字元."
   text_caracters_minimum: "長度必須大於 %{count} 個字元."
   text_length_between: "長度必須介於 %{min} 至 %{max} 個字元之間."
@@ -1026,12 +1061,19 @@
   text_zoom_out: 縮小
   text_warn_on_leaving_unsaved: "若您離開這個頁面，此頁面所包含的未儲存資料將會遺失。"
   text_scm_path_encoding_note: "預設: UTF-8"
-  text_git_repository_note: "純(Bare)儲存機制與本機儲存機制 (e.g. /gitrepo, c:\gitrepo)"
-  text_mercurial_repository_note: "本機儲存機制 (e.g. /hgrepo, c:\hgrepo)"
+  text_git_repository_note: 儲存機制是本機的空(bare)目錄 (即： /gitrepo, c:\gitrepo)
+  text_mercurial_repository_note: 本機儲存機制 (即： /hgrepo, c:\hgrepo)
   text_scm_command: 命令
   text_scm_command_version: 版本
   text_scm_config: 您可以在 config/configuration.yml 中設定 SCM 命令。請在編輯該檔案之後重新啟動 Redmine 應用程式。
   text_scm_command_not_available: SCM 命令無法使用。請檢查管理面板中的設定。
+  text_issue_conflict_resolution_overwrite: "直接套用我的變更 (先前的筆記將會被保留，但是某些變更可能會被複寫)"
+  text_issue_conflict_resolution_add_notes: "新增我的筆記並捨棄我其他的變更"
+  text_issue_conflict_resolution_cancel: "捨棄我全部的變更並重新顯示 %{link}"
+  text_account_destroy_confirmation: |-
+    您確定要繼續這個動作嗎？
+    您的帳戶將會被永久刪除，且無法被重新啟用。
+  text_session_expiration_settings: "警告：變更這些設定將會導致包含您在內的所有工作階段過期。"
 
   default_role_manager: 管理人員
   default_role_developer: 開發人員
@@ -1054,9 +1096,26 @@
   default_priority_immediate: 急
   default_activity_design: 設計
   default_activity_development: 開發
-  
+
   enumeration_issue_priorities: 問題優先權
   enumeration_doc_categories: 文件分類
   enumeration_activities: 活動 (時間追蹤)
   enumeration_system_activity: 系統活動
-  label_diff: diff
+  description_filter: 篩選條件
+  description_search: 搜尋欄位
+  description_choose_project: 專案清單
+  description_project_scope: 搜尋範圍
+  description_notes: 筆記
+  description_message_content: 訊息內容
+  description_query_sort_criteria_attribute: 排序屬性
+  description_query_sort_criteria_direction: 排列順序
+  description_user_mail_notification: 郵件通知設定
+  description_available_columns: 可用欄位
+  description_selected_columns: 已選取的欄位
+  description_all_columns: 所有欄位
+  description_issue_category_reassign: 選擇問題分類
+  description_wiki_subpages_reassign: 選擇新的父頁面
+  description_date_range_list: 從清單中選取範圍
+  description_date_range_interval: 選擇起始與結束日期以設定範圍區間
+  description_date_from: 輸入起始日期
+  description_date_to: 輸入結束日期

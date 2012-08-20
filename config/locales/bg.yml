@@ -1,3 +1,4 @@
+# Bulgarian translation by Ivan Cenov i_cenov@botevgrad.com
 bg:
   # Text direction: Left-to-Right (ltr) or Right-to-Left (rtl)
   direction: ltr
@@ -9,10 +10,10 @@ bg:
       default: "%d-%m-%Y"
       short: "%b %d"
       long: "%B %d, %Y"
-      
+
     day_names: [Неделя, Понеделник, Вторник, Сряда, Четвъртък, Петък, Събота]
     abbr_day_names: [Нед, Пон, Вто, Сря, Чет, Пет, Съб]
-      
+
     # Don't forget the nil at the beginning; there's no such thing as a 0th month
     month_names: [~, Януари, Февруари, Март, Април, Май, Юни, Юли, Август, Септември, Октомври, Ноември, Декември]
     abbr_month_names: [~, Яну, Фев, Мар, Апр, Май, Юни, Юли, Авг, Сеп, Окт, Ное, Дек]
@@ -30,7 +31,7 @@ bg:
       long: "%B %d, %Y %H:%M"
     am: "am"
     pm: "pm"
-    
+
   datetime:
     distance_in_words:
       half_a_minute: "half a minute"
@@ -49,6 +50,9 @@ bg:
       about_x_hours:
         one:   "около 1 час"
         other: "около %{count} часа"
+      x_hours:
+        one:   "1 hour"
+        other: "%{count} hours"
       x_days:
         one:   "1 ден"
         other: "%{count} дена"
@@ -69,33 +73,32 @@ bg:
         other: "почти %{count} години"
 
   number:
-    # Default format for numbers
     format:
       separator: "."
       delimiter: ""
       precision: 3
+
     human:
       format:
-        precision: 1
         delimiter: ""
-      storage_units: 
+        precision: 1
+      storage_units:
         format: "%n %u"
-        units: 
-          byte: 
-            one: Byte
-            other: Bytes
+        units:
+          byte:
+            one: байт
+            other: байта
           kb: "KB"
           mb: "MB"
           gb: "GB"
           tb: "TB"
-
 
 # Used in array.to_sentence.
   support:
     array:
       sentence_connector: "и"
       skip_last_comma: false
-      
+
   activerecord:
     errors:
       template:
@@ -129,7 +132,7 @@ bg:
         cant_link_an_issue_with_a_descendant: "Една задача не може да бъде свързвана към своя подзадача"
 
   actionview_instancetag_blank_option: Изберете
-  
+
   general_text_No: 'Не'
   general_text_Yes: 'Да'
   general_text_no: 'не'
@@ -140,7 +143,7 @@ bg:
   general_csv_encoding: UTF-8
   general_pdf_encoding: UTF-8
   general_first_day_of_week: '1'
-  
+
   notice_account_updated: Профилът е обновен успешно.
   notice_account_invalid_creditentials: Невалиден потребител или парола.
   notice_account_password_updated: Паролата е успешно променена.
@@ -163,20 +166,24 @@ bg:
   notice_feeds_access_key_reseted: Вашия ключ за RSS достъп беше променен.
   notice_api_access_key_reseted: Вашият API ключ за достъп беше изчистен.
   notice_failed_to_save_issues: "Неуспешен запис на %{count} задачи от %{total} избрани: %{ids}."
+  notice_failed_to_save_time_entries: "Невъзможност за запис на %{count} записа за използвано време от %{total} избрани: %{ids}."
   notice_failed_to_save_members: "Невъзможност за запис на член(ове): %{errors}."
   notice_no_issue_selected: "Няма избрани задачи."
   notice_account_pending: "Профилът Ви е създаден и очаква одобрение от администратор."
   notice_default_data_loaded: Примерната информация е заредена успешно.
   notice_unable_delete_version: Невъзможност за изтриване на версия
-  notice_unable_delete_time_entry: Невъзможност за изтриване на запис на time log.
+  notice_unable_delete_time_entry: Невъзможност за изтриване на запис за използвано време.
   notice_issue_done_ratios_updated: Обновен процент на завършените задачи.
   notice_gantt_chart_truncated: Мрежовият график е съкратен, понеже броят на обектите, които могат да бъдат показани е твърде голям (%{max})
   notice_issue_successful_create: Задача %{id} е създадена.
-  
+  notice_issue_update_conflict: Задачата е била променена от друг потребител, докато вие сте я редактирали.
+  notice_account_deleted: Вашият профил беше премахнат без възможност за възстановяване.
+
   error_can_t_load_default_data: "Грешка при зареждане на примерната информация: %{value}"
   error_scm_not_found: Несъществуващ обект в хранилището.
   error_scm_command_failed: "Грешка при опит за комуникация с хранилище: %{value}"
   error_scm_annotate: "Обектът не съществува или не може да бъде анотиран."
+  error_scm_annotate_big_text_file: "Файлът не може да бъде анотиран, понеже надхвърля максималния размер за текстови файлове."
   error_issue_not_found_in_project: 'Задачата не е намерена или не принадлежи на този проект'
   error_no_tracker_in_project: Няма асоциирани тракери с този проект. Проверете настройките на проекта.
   error_no_default_issue_status: Няма установено подразбиращо се състояние за задачите. Моля проверете вашата конфигурация (Вижте "Администрация -> Състояния на задачи").
@@ -190,8 +197,10 @@ bg:
   error_workflow_copy_target: Моля изберете тракер(и) и роля (роли).
   error_unable_delete_issue_status: Невъзможност за изтриване на състояние на задача
   error_unable_to_connect: Невъзможност за свързване с (%{value})
+  error_attachment_too_big: Този файл не може да бъде качен, понеже надхвърля максималната възможна големина (%{max_size})
+  error_session_expired: Вашата сесия е изтекла. Моля влезете в Redmine отново.
   warning_attachments_not_saved: "%{count} файла не бяха записани."
-  
+
   mail_subject_lost_password: "Вашата парола (%{value})"
   mail_body_lost_password: 'За да смените паролата си, използвайте следния линк:'
   mail_subject_register: "Активация на профил (%{value})"
@@ -204,12 +213,12 @@ bg:
   mail_body_reminder: "%{count} задачи, назначени на вас са с краен срок в следващите %{days} дни:"
   mail_subject_wiki_content_added: "Wiki страницата '%{id}' беше добавена"
   mail_body_wiki_content_added: Wiki страницата '%{id}' беше добавена от %{author}.
-  mail_subject_wiki_content_updated: "Wiki страницата '%{id}' не беше обновена"
+  mail_subject_wiki_content_updated: "Wiki страницата '%{id}' беше обновена"
   mail_body_wiki_content_updated: Wiki страницата '%{id}' беше обновена от %{author}.
-  
+
   gui_validation_error: 1 грешка
   gui_validation_error_plural: "%{count} грешки"
-  
+
   field_name: Име
   field_description: Описание
   field_summary: Анотация
@@ -266,7 +275,7 @@ bg:
   field_port: Порт
   field_account: Профил
   field_base_dn: Base DN
-  field_attr_login: Атрибут Login 
+  field_attr_login: Атрибут Login
   field_attr_firstname: Атрибут Първо име (Firstname)
   field_attr_lastname: Атрибут Фамилия (Lastname)
   field_attr_mail: Атрибут Email
@@ -316,6 +325,9 @@ bg:
   field_root_directory: Коренна директория (папка)
   field_cvsroot: CVSROOT
   field_cvs_module: Модул
+  field_repository_is_default: Главно хранилище
+  field_multiple: Избор на повече от една стойност
+  field_ldap_filter: LDAP филтър
 
   setting_app_title: Заглавие
   setting_app_subtitle: Описание
@@ -330,10 +342,10 @@ bg:
   setting_plain_text_mail: само чист текст (без HTML)
   setting_host_name: Хост
   setting_text_formatting: Форматиране на текста
-  setting_wiki_compression: Wiki компресиране на историята
-  setting_feeds_limit: Максимален брой за емисии
+  setting_wiki_compression: Компресиране на Wiki историята
+  setting_feeds_limit: Максимален брой записи в ATOM емисии
   setting_default_projects_public: Новите проекти са публични по подразбиране
-  setting_autofetch_changesets: Автоматично обработване на ревизиите
+  setting_autofetch_changesets: Автоматично извличане на ревизиите
   setting_sys_api_enabled: Разрешаване на WS за управление
   setting_commit_ref_keywords: Отбелязващи ключови думи
   setting_commit_fix_keywords: Приключващи ключови думи
@@ -342,14 +354,14 @@ bg:
   setting_time_format: Формат на часа
   setting_cross_project_issue_relations: Релации на задачи между проекти
   setting_issue_list_default_columns: Показвани колони по подразбиране
-  setting_repositories_encodings: Кодови таблици
+  setting_repositories_encodings: Кодова таблица на прикачените файлове и хранилищата
   setting_emails_header: Emails header
   setting_emails_footer: Подтекст за e-mail
   setting_protocol: Протокол
   setting_per_page_options: Опции за страниране
   setting_user_format: Потребителски формат
   setting_activity_days_default: Брой дни показвани на таб Дейност
-  setting_display_subprojects_issues: Показване на подпроектите в проектите по подразбиране
+  setting_display_subprojects_issues: Задачите от подпроектите по подразбиране се показват в главните проекти
   setting_enabled_scm: Разрешена SCM
   setting_mail_handler_body_delimiters: Отрязване на e-mail-ите след един от тези редове
   setting_mail_handler_api_enabled: Разрешаване на WS за входящи e-mail-и
@@ -357,7 +369,7 @@ bg:
   setting_sequential_project_identifiers: Генериране на последователни проектни идентификатори
   setting_gravatar_enabled: Използване на портребителски икони от Gravatar
   setting_gravatar_default: Подразбиращо се изображение от Gravatar
-  setting_diff_max_lines_displayed: Максимален брой показани diff редове
+  setting_diff_max_lines_displayed: Максимален брой показвани diff редове
   setting_file_max_size_displayed: Максимален размер на текстовите файлове, показвани inline
   setting_repository_log_display_limit: Максимален брой на показванете ревизии в лог файла
   setting_openid: Рарешаване на OpenID вход и регистрация
@@ -369,13 +381,18 @@ bg:
   setting_issue_done_ratio_issue_status: Използване на състоянието на задачите
   setting_start_of_week: Първи ден на седмицата
   setting_rest_api_enabled: Разрешаване на REST web сървис
-  setting_cache_formatted_text: Cache formatted text
+  setting_cache_formatted_text: Кеширане на форматираните текстове
   setting_default_notification_option: Подразбиращ се начин за известяване
   setting_commit_logtime_enabled: Разрешаване на отчитането на работното време
   setting_commit_logtime_activity_id: Дейност при отчитане на работното време
   setting_gantt_items_limit: Максимален брой обекти, които да се показват в мрежов график
   setting_issue_group_assignment: Разрешено назначаването на задачи на групи
-  
+  setting_default_issue_start_date_to_creation_date: Начална дата на новите задачи по подразбиране да бъде днешната дата
+  setting_commit_cross_project_ref: Отбелязване и приключване на задачи от други проекти, несвързани с конкретното хранилище
+  setting_unsubscribe: Потребителите могат да премахват профилите си
+  setting_session_lifetime: Максимален живот на сесиите
+  setting_session_timeout: Таймаут за неактивност преди прекратяване на сесиите
+
   permission_add_project: Създаване на проект
   permission_add_subprojects: Създаване на подпроекти
   permission_edit_project: Редактиране на проект
@@ -433,6 +450,7 @@ bg:
   permission_delete_own_messages: Изтриване на собствени съобщения
   permission_export_wiki_pages: Експорт на wiki страници
   permission_manage_subtasks: Управление на подзадачите
+  permission_manage_related_issues: Управление на връзките между задачи и ревизии
 
   project_module_issue_tracking: Тракинг
   project_module_time_tracking: Отделяне на време
@@ -583,6 +601,10 @@ bg:
     zero:  0 затворени
     one:   1 затворена
     other: "%{count} затворени"
+  label_x_issues:
+    zero:  0 задачи
+    one:   1 задача
+    other: "%{count} задачи"
   label_total: Общо
   label_permissions: Права
   label_current_status: Текущо състояние
@@ -606,9 +628,9 @@ bg:
   label_comment: Коментар
   label_comment_plural: Коментари
   label_x_comments:
-    zero: 0 коментари
+    zero: 0 коментара
     one: 1 коментар
-    other: "%{count} коментари"
+    other: "%{count} коментара"
   label_comment_add: Добавяне на коментар
   label_comment_added: Добавен коментар
   label_comment_delete: Изтриване на коментари
@@ -643,6 +665,7 @@ bg:
   label_not_contains: не съдържа
   label_day_plural: дни
   label_repository: Хранилище
+  label_repository_new: Ново хранилище
   label_repository_plural: Хранилища
   label_browse: Разглеждане
   label_modification: "%{count} промяна"
@@ -695,6 +718,7 @@ bg:
   label_statistics: Статистики
   label_commits_per_month: Ревизии по месеци
   label_commits_per_author: Ревизии по автор
+  label_diff: diff
   label_view_diff: Виж разликите
   label_diff_inline: хоризонтално
   label_diff_side_by_side: вертикално
@@ -823,6 +847,14 @@ bg:
   label_issues_visibility_public: Всички не-лични задачи
   label_issues_visibility_own: Задачи, създадени от или назначени на потребителя
   label_git_report_last_commit: Извеждане на последното поверяване за файлове и папки
+  label_parent_revision: Ревизия родител
+  label_child_revision: Ревизия наследник
+  label_export_options: "%{export_format} опции за експорт"
+  label_copy_attachments: Копиране на прикачените файлове
+  label_item_position: "%{position}/%{count}"
+  label_completed_versions: Завършени версии
+  label_search_for_watchers: Търсене на потребители за наблюдатели
+  label_session_expiration: Изтичане на сесиите
 
   button_login: Вход
   button_submit: Прикачване
@@ -870,11 +902,14 @@ bg:
   button_quote: Цитат
   button_duplicate: Дублиране
   button_show: Показване
-  
+  button_edit_section: Редактиране на тази секция
+  button_export: Експорт
+  button_delete_my_account: Премахване на моя профил
+
   status_active: активен
   status_registered: регистриран
   status_locked: заключен
-  
+
   version_status_open: отворена
   version_status_locked: заключена
   version_status_closed: затворена
@@ -897,7 +932,7 @@ bg:
   text_tip_issue_begin_day: задача, започваща този ден
   text_tip_issue_end_day: задача, завършваща този ден
   text_tip_issue_begin_end_day: задача, започваща и завършваща този ден
-  text_project_identifier_info: 'Позволени са малки букви (a-z), цифри и тирета.<br />Невъзможна промяна след запис.'
+  text_project_identifier_info: 'Позволени са малки букви (a-z), цифри, тирета и _.<br />Промяна след създаването му не е възможна.'
   text_caracters_maximum: "До %{count} символа."
   text_caracters_minimum: "Минимум %{count} символа."
   text_length_between: "От %{min} до %{max} символа."
@@ -951,6 +986,11 @@ bg:
   text_scm_command_version: Версия
   text_scm_config: Можете да конфигурирате SCM командите в config/configuration.yml. За да активирате промените, рестартирайте Redmine.
   text_scm_command_not_available: SCM командата не е налична или достъпна. Проверете конфигурацията в административния панел.
+  text_issue_conflict_resolution_overwrite: Прилагане на моите промени (предишните коментари ще бъдат запазени, но някои други промени може да бъдат презаписани)
+  text_issue_conflict_resolution_add_notes: Добавяне на моите коментари и отхвърляне на другите мои промени
+  text_issue_conflict_resolution_cancel: Отхвърляне на всички мои промени и презареждане на %{link}
+  text_account_destroy_confirmation: "Сигурен/на ли сте, че желаете да продължите?\nВашият профил ще бъде премахнат без възможност за възстановяване."
+  text_session_expiration_settings: "Внимание: промяната на тези установяваноя може да прекрати всички активни сесии, включително и вашата."
 
   default_role_manager: Мениджър
   default_role_developer: Разработчик
@@ -978,5 +1018,21 @@ bg:
   enumeration_doc_categories: Категории документи
   enumeration_activities: Дейности (time tracking)
   enumeration_system_activity: Системна активност
-
-  label_diff: diff
+  description_filter: Филтър
+  description_search: Търсене
+  description_choose_project: Проекти
+  description_project_scope: Обхват на търсенето
+  description_notes: Бележки
+  description_message_content: Съдържание на съобщението
+  description_query_sort_criteria_attribute: Атрибут на сортиране
+  description_query_sort_criteria_direction: Посока на сортиране
+  description_user_mail_notification: Конфигурация известията по пощата
+  description_available_columns: Налични колони
+  description_selected_columns: Избрани колони
+  description_issue_category_reassign: Изберете категория
+  description_wiki_subpages_reassign: Изберете нова родителска страница
+  description_all_columns: Всички колони
+  description_date_range_list: Изберете диапазон от списъка
+  description_date_range_interval: Изберете диапазон чрез задаване на начална и крайна дати
+  description_date_from: Въведете начална дата
+  description_date_to: Въведете крайна дата

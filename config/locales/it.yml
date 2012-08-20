@@ -1,4 +1,4 @@
-# Italian translations for Ruby on Rails 
+# Italian translations for Ruby on Rails
 # by Claudio Poli (masterkain@gmail.com)
 # by Diego Pierotto (ita.translations@tiscali.it)
 # by Emidio Stani (emidiostani@gmail.com)
@@ -20,7 +20,7 @@ it:
       - :day
       - :month
       - :year
-  
+
   time:
     formats:
       default: "%a %d %b %Y, %H:%M:%S %z"
@@ -28,14 +28,14 @@ it:
       short: "%d %b %H:%M"
       long: "%d %B %Y %H:%M"
       only_second: "%S"
-      
+
       datetime:
         formats:
           default: "%d-%m-%YT%H:%M:%S%Z"
-          
+
     am: 'am'
     pm: 'pm'
-      
+
   datetime:
     distance_in_words:
       half_a_minute: "mezzo minuto"
@@ -54,6 +54,9 @@ it:
       about_x_hours:
         one:  "circa un'ora"
         other: "circa %{count} ore"
+      x_hours:
+        one:   "1 hour"
+        other: "%{count} hours"
       x_days:
         one:  "1 giorno"
         other: "%{count} giorni"
@@ -72,7 +75,7 @@ it:
       almost_x_years:
         one:   "quasi 1 anno"
         other: "quasi %{count} anni"
-      
+
   number:
     format:
       precision: 3
@@ -94,16 +97,16 @@ it:
           mb: "MB"
           gb: "GB"
           tb: "TB"
-        
+
   support:
     array:
       sentence_connector: "e"
       skip_last_comma: false
-      
+
   activerecord:
     errors:
       template:
-        header: 
+        header:
           one: "Non posso salvare questo %{model}: 1 errore"
           other: "Non posso salvare questo %{model}: %{count} errori."
         body: "Per favore ricontrolla i seguenti campi:"
@@ -133,7 +136,7 @@ it:
         cant_link_an_issue_with_a_descendant: "Una segnalazione non può essere collegata a una delle sue discendenti"
 
   actionview_instancetag_blank_option: Scegli
-  
+
   general_text_No: 'No'
   general_text_Yes: 'Sì'
   general_text_no: 'no'
@@ -144,7 +147,7 @@ it:
   general_csv_encoding: ISO-8859-1
   general_pdf_encoding: UTF-8
   general_first_day_of_week: '1'
-  
+
   notice_account_updated: L'utente è stato aggiornato.
   notice_account_invalid_creditentials: Nome utente o password non validi.
   notice_account_password_updated: La password è stata aggiornata.
@@ -164,18 +167,18 @@ it:
   notice_email_sent: "Una email è stata spedita a %{value}"
   notice_email_error: "Si è verificato un errore durante l'invio di una email (%{value})"
   notice_feeds_access_key_reseted: La tua chiave di accesso RSS è stata reimpostata.
-  
+
   error_scm_not_found: "La risorsa e/o la versione non esistono nel repository."
   error_scm_command_failed: "Si è verificato un errore durante l'accesso al repository: %{value}"
-  
+
   mail_subject_lost_password: "Password %{value}"
   mail_body_lost_password: 'Per cambiare la password, usa il seguente collegamento:'
   mail_subject_register: "Attivazione utente %{value}"
   mail_body_register: "Per attivare l'utente, usa il seguente collegamento:"
-  
+
   gui_validation_error: 1 errore
   gui_validation_error_plural: "%{count} errori"
-  
+
   field_name: Nome
   field_description: Descrizione
   field_summary: Sommario
@@ -206,7 +209,7 @@ it:
   field_is_default: Stato predefinito
   field_tracker: Tracker
   field_subject: Oggetto
-  field_due_date: Data ultima
+  field_due_date: Scadenza
   field_assigned_to: Assegnato a
   field_priority: Priorità
   field_fixed_version: Versione prevista
@@ -255,7 +258,7 @@ it:
   field_redirect_existing_links: Redirige i collegamenti esistenti
   field_estimated_hours: Tempo stimato
   field_default_value: Stato predefinito
-  
+
   setting_app_title: Titolo applicazione
   setting_app_subtitle: Sottotitolo applicazione
   setting_welcome_text: Testo di benvenuto
@@ -276,7 +279,7 @@ it:
   setting_autologin: Connessione automatica
   setting_date_format: Formato data
   setting_cross_project_issue_relations: Consenti la creazione di relazioni tra segnalazioni in progetti differenti
-  
+
   label_user: Utente
   label_user_plural: Utenti
   label_user_new: Nuovo utente
@@ -532,7 +535,7 @@ it:
   label_added_time_by: "Aggiunto da %{author} %{age} fa"
   label_updated_time: "Aggiornato %{value} fa"
   label_jump_to_a_project: Vai al progetto...
-  
+
   button_login: Entra
   button_submit: Invia
   button_save: Salva
@@ -565,11 +568,11 @@ it:
   button_unarchive: Ripristina
   button_reset: Reimposta
   button_rename: Rinomina
-  
+
   status_active: attivo
   status_registered: registrato
   status_locked: bloccato
-  
+
   text_select_mail_notifications: Seleziona le azioni per cui deve essere inviata una notifica.
   text_regexp_info: es. ^[A-Z0-9]+$
   text_min_max_length_info: 0 significa nessuna restrizione
@@ -579,7 +582,6 @@ it:
   text_tip_issue_begin_day: attività che iniziano in questa giornata
   text_tip_issue_end_day: attività che terminano in questa giornata
   text_tip_issue_begin_end_day: attività che iniziano e terminano in questa giornata
-  text_project_identifier_info: "Lettere minuscole (a-z), numeri e trattini permessi.<br />Una volta salvato, l'identificativo non può essere modificato."
   text_caracters_maximum: "massimo %{count} caratteri."
   text_length_between: "Lunghezza compresa tra %{min} e %{max} caratteri."
   text_tracker_no_workflow: Nessun workflow definito per questo tracker
@@ -592,7 +594,7 @@ it:
   text_issue_category_destroy_question: "Alcune segnalazioni (%{count}) risultano assegnate a questa categoria. Cosa vuoi fare ?"
   text_issue_category_destroy_assignments: Rimuovi le assegnazioni a questa categoria
   text_issue_category_reassign_to: Riassegna segnalazioni a questa categoria
-  
+
   default_role_manager: Gestore
   default_role_developer: Sviluppatore
   default_role_reporter: Segnalatore
@@ -614,7 +616,7 @@ it:
   default_priority_immediate: Immediata
   default_activity_design: Progettazione
   default_activity_development: Sviluppo
-  
+
   enumeration_issue_priorities: Priorità segnalazioni
   enumeration_doc_categories: Categorie di documenti
   enumeration_activities: Attività (time tracking)
@@ -623,7 +625,6 @@ it:
   field_column_names: Colonne
   label_default_columns: Colonne predefinite
   setting_issue_list_default_columns: Colonne predefinite mostrate nell'elenco segnalazioni
-  setting_repositories_encodings: Codifiche dei repository
   notice_no_issue_selected: "Nessuna segnalazione selezionata! Seleziona le segnalazioni che intendi modificare."
   label_bulk_edit_selected_issues: Modifica massiva delle segnalazioni selezionate
   label_no_change_option: (Nessuna modifica)
@@ -970,7 +971,6 @@ it:
   field_root_directory: Directory radice
   field_cvs_module: Modulo
   field_cvsroot: CVSROOT
-  text_git_repository_note: Repository centrale e locale (es. /gitrepo, c:\gitrepo)
   text_mercurial_repository_note: Repository locale (es. /hgrepo, c:\hgrepo)
   text_scm_command: Comando
   text_scm_command_version: Versione
@@ -981,3 +981,62 @@ it:
   label_between: tra
   setting_issue_group_assignment: Permetti di assegnare una segnalazione a gruppi
   label_diff: diff
+  text_git_repository_note: Il repository è spoglio e locale (e.g. /gitrepo, c:\gitrepo)
+  description_query_sort_criteria_direction: Ordinamento
+  description_project_scope: Search scope
+  description_filter: Filtro
+  description_user_mail_notification: Impostazioni notifica via mail
+  description_date_from: Inserisci la data d'inizio
+  description_message_content: Contenuto del messaggio
+  description_available_columns: Colonne disponibili
+  description_date_range_interval: Scegli l'intervallo selezionando la data di inizio e di fine
+  description_issue_category_reassign: Scegli la categoria della segnalazione
+  description_search: Campo di ricerca
+  description_notes: Note
+  description_date_range_list: Scegli l'intervallo dalla lista
+  description_choose_project: Progetti
+  description_date_to: Inserisci la data di fine
+  description_query_sort_criteria_attribute: Attributo di ordinamento
+  description_wiki_subpages_reassign: Scegli la nuova pagina padre
+  description_selected_columns: Colonne selezionate
+  label_parent_revision: Padre
+  label_child_revision: Figlio
+  error_scm_annotate_big_text_file: La nota non può essere salvata, supera la dimensiona massima del campo di testo.
+  setting_default_issue_start_date_to_creation_date: Usa la data corrente come data d'inizio per le nuove segnalazioni
+  button_edit_section: Modifica questa sezione
+  setting_repositories_encodings: Codifica degli allegati e dei repository
+  description_all_columns: Tutte le colonne
+  button_export: Esporta
+  label_export_options: "%{export_format} opzioni per l'export"
+  error_attachment_too_big: Questo file non può essere caricato in quanto la sua dimensione supera la massima consentita (%{max_size})
+  notice_failed_to_save_time_entries: "Failed to save %{count} time entrie(s) on %{total} selected: %{ids}."
+  label_x_issues:
+    zero:  0 segnalazione
+    one:   1 segnalazione
+    other: "%{count} segnalazioni"
+  label_repository_new: New repository
+  field_repository_is_default: Main repository
+  label_copy_attachments: Copy attachments
+  label_item_position: "%{position}/%{count}"
+  label_completed_versions: Completed versions
+  text_project_identifier_info: Only lower case letters (a-z), numbers, dashes and underscores are allowed.<br />Once saved, the identifier cannot be changed.
+  field_multiple: Multiple values
+  setting_commit_cross_project_ref: Allow issues of all the other projects to be referenced and fixed
+  text_issue_conflict_resolution_add_notes: Add my notes and discard my other changes
+  text_issue_conflict_resolution_overwrite: Apply my changes anyway (previous notes will be kept but some changes may be overwritten)
+  notice_issue_update_conflict: The issue has been updated by an other user while you were editing it.
+  text_issue_conflict_resolution_cancel: Discard all my changes and redisplay %{link}
+  permission_manage_related_issues: Manage related issues
+  field_ldap_filter: LDAP filter
+  label_search_for_watchers: Search for watchers to add
+  notice_account_deleted: Your account has been permanently deleted.
+  setting_unsubscribe: Allow users to delete their own account
+  button_delete_my_account: Delete my account
+  text_account_destroy_confirmation: |-
+    Are you sure you want to proceed?
+    Your account will be permanently deleted, with no way to reactivate it.
+  error_session_expired: Your session has expired. Please login again.
+  text_session_expiration_settings: "Warning: changing these settings may expire the current sessions including yours."
+  setting_session_lifetime: Session maximum lifetime
+  setting_session_timeout: Session inactivity timeout
+  label_session_expiration: Session expiration

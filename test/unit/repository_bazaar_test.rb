@@ -20,8 +20,11 @@ require File.expand_path('../../test_helper', __FILE__)
 class RepositoryBazaarTest < ActiveSupport::TestCase
   fixtures :projects
 
+  include Redmine::I18n
+
   REPOSITORY_PATH = Rails.root.join('tmp/test/bazaar_repository/trunk').to_s
   REPOSITORY_PATH.gsub!(/\/+/, '/')
+  NUM_REV = 4
 
   def setup
     @project = Project.find(3)
@@ -31,25 +34,56 @@ class RepositoryBazaarTest < ActiveSupport::TestCase
     assert @repository
   end
 
+  def test_blank_path_to_repository_error_message
+    set_language_if_valid 'en'
+    repo = Repository::Bazaar.new(
+                          :project      => @project,
+                          :identifier   => 'test',
+                          :log_encoding => 'UTF-8'
+                        )
+    assert !repo.save
+    assert_include "Path to repository can't be blank",
+                   repo.errors.full_messages
+  end
+
+  def test_blank_path_to_repository_error_message_fr
+    set_language_if_valid 'fr'
+    str = "Chemin du d\xc3\xa9p\xc3\xb4t doit \xc3\xaatre renseign\xc3\xa9(e)"
+    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    repo = Repository::Bazaar.new(
+                          :project      => @project,
+                          :url          => "",
+                          :identifier   => 'test',
+                          :log_encoding => 'UTF-8'
+                        )
+    assert !repo.save
+    assert_include str, repo.errors.full_messages
+  end
+
   if File.directory?(REPOSITORY_PATH)
     def test_fetch_changesets_from_scratch
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
 
-      assert_equal 4, @repository.changesets.count
+      assert_equal NUM_REV, @repository.changesets.count
       assert_equal 9, @repository.changes.count
       assert_equal 'Initial import', @repository.changesets.find_by_revision('1').comments
     end
 
     def test_fetch_changesets_incremental
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       # Remove changesets with revision > 5
       @repository.changesets.find(:all).each {|c| c.destroy if c.revision.to_i > 2}
-      @repository.reload
+      @project.reload
       assert_equal 2, @repository.changesets.count
 
       @repository.fetch_changesets
-      assert_equal 4, @repository.changesets.count
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
     end
 
     def test_entries
@@ -72,29 +106,37 @@ class RepositoryBazaarTest < ActiveSupport::TestCase
     end
 
     def test_previous
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       changeset = @repository.find_changeset_by_name('3')
       assert_equal @repository.find_changeset_by_name('2'), changeset.previous
     end
 
     def test_previous_nil
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       changeset = @repository.find_changeset_by_name('1')
       assert_nil changeset.previous
     end
 
     def test_next
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       changeset = @repository.find_changeset_by_name('2')
       assert_equal @repository.find_changeset_by_name('3'), changeset.next
     end
 
     def test_next_nil
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       changeset = @repository.find_changeset_by_name('4')
       assert_nil changeset.next
     end

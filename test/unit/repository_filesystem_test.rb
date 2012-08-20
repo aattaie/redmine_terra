@@ -20,6 +20,8 @@ require File.expand_path('../../test_helper', __FILE__)
 class RepositoryFilesystemTest < ActiveSupport::TestCase
   fixtures :projects
 
+  include Redmine::I18n
+
   REPOSITORY_PATH = Rails.root.join('tmp/test/filesystem_repository').to_s
 
   def setup
@@ -32,10 +34,37 @@ class RepositoryFilesystemTest < ActiveSupport::TestCase
     assert @repository
   end
 
+  def test_blank_root_directory_error_message
+    set_language_if_valid 'en'
+    repo = Repository::Filesystem.new(
+                          :project      => @project,
+                          :identifier   => 'test'
+                        )
+    assert !repo.save
+    assert_include "Root directory can't be blank",
+                   repo.errors.full_messages
+  end
+
+  def test_blank_root_directory_error_message_fr
+    set_language_if_valid 'fr'
+    str = "R\xc3\xa9pertoire racine doit \xc3\xaatre renseign\xc3\xa9(e)"
+    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    repo = Repository::Filesystem.new(
+                          :project      => @project,
+                          :url          => "",
+                          :identifier   => 'test',
+                          :path_encoding => ''
+                        )
+    assert !repo.save
+    assert_include str, repo.errors.full_messages
+  end
+
   if File.directory?(REPOSITORY_PATH)
     def test_fetch_changesets
+      assert_equal 0, @repository.changesets.count
+      assert_equal 0, @repository.changes.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
       assert_equal 0, @repository.changesets.count
       assert_equal 0, @repository.changes.count
     end

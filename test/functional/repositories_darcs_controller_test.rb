@@ -16,22 +16,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 require File.expand_path('../../test_helper', __FILE__)
-require 'repositories_controller'
-
-# Re-raise errors caught by the controller.
-class RepositoriesController; def rescue_action(e) raise e end; end
 
 class RepositoriesDarcsControllerTest < ActionController::TestCase
+  tests RepositoriesController
+
   fixtures :projects, :users, :roles, :members, :member_roles,
            :repositories, :enabled_modules
 
   REPOSITORY_PATH = Rails.root.join('tmp/test/darcs_repository').to_s
   PRJ_ID = 3
+  NUM_REV = 6
 
   def setup
-    @controller = RepositoriesController.new
-    @request    = ActionController::TestRequest.new
-    @response   = ActionController::TestResponse.new
     User.current = nil
     @project = Project.find(PRJ_ID)
     @repository = Repository::Darcs.create(
@@ -43,9 +39,21 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
   end
 
   if File.directory?(REPOSITORY_PATH)
+    def test_get_new
+      @request.session[:user_id] = 1
+      @project.repository.destroy
+      get :new, :project_id => 'subproject1', :repository_scm => 'Darcs'
+      assert_response :success
+      assert_template 'new'
+      assert_kind_of Repository::Darcs, assigns(:repository)
+      assert assigns(:repository).new_record?
+    end
+
     def test_browse_root
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       get :show, :id => PRJ_ID
       assert_response :success
       assert_template 'show'
@@ -57,9 +65,11 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
     end
 
     def test_browse_directory
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
-      get :show, :id => PRJ_ID, :path => ['images']
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
+      get :show, :id => PRJ_ID, :path => repository_path_hash(['images'])[:param]
       assert_response :success
       assert_template 'show'
       assert_not_nil assigns(:entries)
@@ -71,9 +81,12 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
     end
 
     def test_browse_at_given_revision
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
-      get :show, :id => PRJ_ID, :path => ['images'], :rev => 1
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
+      get :show, :id => PRJ_ID, :path => repository_path_hash(['images'])[:param],
+          :rev => 1
       assert_response :success
       assert_template 'show'
       assert_not_nil assigns(:entries)
@@ -81,17 +94,22 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
     end
 
     def test_changes
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
-      get :changes, :id => PRJ_ID, :path => ['images', 'edit.png']
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
+      get :changes, :id => PRJ_ID,
+          :path => repository_path_hash(['images', 'edit.png'])[:param]
       assert_response :success
       assert_template 'changes'
       assert_tag :tag => 'h2', :content => 'edit.png'
     end
 
     def test_diff
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
       # Full diff of changeset 5
       ['inline', 'sbs'].each do |dt|
         get :diff, :id => PRJ_ID, :rev => 5, :type => dt
@@ -108,11 +126,14 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
 
     def test_destroy_valid_repository
       @request.session[:user_id] = 1 # admin
+      assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
-      @repository.reload
-      assert @repository.changesets.count > 0
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
 
-      get :destroy, :id => PRJ_ID
+      assert_difference 'Repository.count', -1 do
+        delete :destroy, :id => @repository.id
+      end
       assert_response 302
       @project.reload
       assert_nil @project.repository
@@ -120,26 +141,19 @@ class RepositoriesDarcsControllerTest < ActionController::TestCase
 
     def test_destroy_invalid_repository
       @request.session[:user_id] = 1 # admin
-      @repository.fetch_changesets
-      @repository.reload
-      assert @repository.changesets.count > 0
-
-      get :destroy, :id => PRJ_ID
-      assert_response 302
-      @project.reload
-      assert_nil @project.repository
-
-      @repository = Repository::Darcs.create(
+      @project.repository.destroy
+      @repository = Repository::Darcs.create!(
                         :project      => @project,
                         :url          => "/invalid",
                         :log_encoding => 'UTF-8'
                         )
-      assert @repository
       @repository.fetch_changesets
-      @repository.reload
+      @project.reload
       assert_equal 0, @repository.changesets.count
 
-      get :destroy, :id => PRJ_ID
+      assert_difference 'Repository.count', -1 do
+        delete :destroy, :id => @repository.id
+      end
       assert_response 302
       @project.reload
       assert_nil @project.repository

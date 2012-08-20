@@ -18,7 +18,9 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class WikiContentTest < ActiveSupport::TestCase
-  fixtures :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions, :users
+  fixtures :projects, :enabled_modules,
+           :users, :members, :member_roles, :roles,
+           :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions
 
   def setup
     @wiki = Wiki.find(1)
@@ -84,5 +86,12 @@ class WikiContentTest < ActiveSupport::TestCase
     assert page.save
     page.reload
     assert_equal 500.kilobyte, page.content.text.size
+  end
+  
+  def test_current_version
+    content = WikiContent.find(11)
+    assert_equal true, content.current_version?
+    assert_equal true, content.versions.first(:order => 'version DESC').current_version?
+    assert_equal false, content.versions.first(:order => 'version ASC').current_version?
   end
 end

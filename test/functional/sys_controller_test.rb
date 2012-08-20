@@ -39,7 +39,10 @@ class SysControllerTest < ActionController::TestCase
     assert_equal 'application/xml', @response.content_type
     with_options :tag => 'projects' do |test|
       test.assert_tag :children => { :count  => Project.active.has_module(:repository).count }
+      test.assert_tag 'project', :child => {:tag => 'identifier', :sibling => {:tag => 'is-public'}}
     end
+    assert_no_tag 'extra-info'
+    assert_no_tag 'extra_info'
   end
 
   def test_create_project_repository
@@ -49,21 +52,52 @@ class SysControllerTest < ActionController::TestCase
                                      :vendor => 'Subversion',
                                      :repository => { :url => 'file:///create/project/repository/subproject2'}
     assert_response :created
+    assert_equal 'application/xml', @response.content_type
 
     r = Project.find(4).repository
     assert r.is_a?(Repository::Subversion)
     assert_equal 'file:///create/project/repository/subproject2', r.url
+    
+    assert_tag 'repository-subversion',
+      :child => {
+        :tag => 'id', :content => r.id.to_s,
+        :sibling => {:tag => 'url', :content => r.url}
+      }
+    assert_no_tag 'extra-info'
+    assert_no_tag 'extra_info'
+  end
+
+  def test_create_already_existing
+    post :create_project_repository, :id => 1,
+      :vendor => 'Subversion',
+      :repository => { :url => 'file:///create/project/repository/subproject2'}
+
+    assert_response :conflict
+  end
+
+  def test_create_with_failure
+    post :create_project_repository, :id => 4,
+      :vendor => 'Subversion',
+      :repository => { :url => 'invalid url'}
+
+    assert_response :unprocessable_entity
   end
 
   def test_fetch_changesets
-    Repository::Subversion.any_instance.expects(:fetch_changesets).returns(true)
+    Repository::Subversion.any_instance.expects(:fetch_changesets).twice.returns(true)
     get :fetch_changesets
     assert_response :success
   end
 
-  def test_fetch_changesets_one_project
-    Repository::Subversion.any_instance.expects(:fetch_changesets).returns(true)
+  def test_fetch_changesets_one_project_by_identifier
+    Repository::Subversion.any_instance.expects(:fetch_changesets).once.returns(true)
     get :fetch_changesets, :id => 'ecookbook'
+    assert_response :success
+  end
+
+  def test_fetch_changesets_one_project_by_id
+    Repository::Subversion.any_instance.expects(:fetch_changesets).once.returns(true)
+    get :fetch_changesets, :id => '1'
     assert_response :success
   end
 

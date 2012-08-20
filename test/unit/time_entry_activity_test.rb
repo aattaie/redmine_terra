@@ -1,16 +1,16 @@
-# redMine - project management software
-# Copyright (C) 2006-2008  Jean-Philippe Lang
+# Redmine - project management software
+# Copyright (C) 2006-2012  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -19,6 +19,8 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class TimeEntryActivityTest < ActiveSupport::TestCase
   fixtures :enumerations, :time_entries
+
+  include Redmine::I18n
 
   def test_should_be_an_enumeration
     assert TimeEntryActivity.ancestors.include?(Enumeration)
@@ -44,12 +46,13 @@ class TimeEntryActivityTest < ActiveSupport::TestCase
   end
 
   def test_create_without_required_custom_field_should_fail
+    set_language_if_valid 'en'
     field = TimeEntryActivityCustomField.find_by_name('Billable')
     field.update_attribute(:is_required, true)
 
     e = TimeEntryActivity.new(:name => 'Custom Data')
     assert !e.save
-    assert_equal I18n.translate('activerecord.errors.messages.invalid'), e.errors.on(:custom_values)
+    assert_equal ["Billable can't be blank"], e.errors.full_messages
   end
 
   def test_create_with_required_custom_field_should_succeed
@@ -61,7 +64,8 @@ class TimeEntryActivityTest < ActiveSupport::TestCase
     assert e.save
   end
 
-  def test_update_issue_with_required_custom_field_change
+  def test_update_with_required_custom_field_change
+    set_language_if_valid 'en'
     field = TimeEntryActivityCustomField.find_by_name('Billable')
     field.update_attribute(:is_required, true)
 
@@ -72,14 +76,13 @@ class TimeEntryActivityTest < ActiveSupport::TestCase
     # Blanking custom field, save should fail
     e.custom_field_values = {field.id => ""}
     assert !e.save
-    assert e.errors.on(:custom_values)
-    
+    assert_equal ["Billable can't be blank"], e.errors.full_messages
+
     # Update custom field to valid value, save should succeed
     e.custom_field_values = {field.id => "0"}
     assert e.save
     e.reload
     assert_equal "0", e.custom_value_for(field).value
   end
-
 end
 

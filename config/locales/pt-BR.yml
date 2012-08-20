@@ -1,5 +1,4 @@
 pt-BR:
-  # formatos de data e hora
   direction: ltr
   date:
     formats:
@@ -19,10 +18,10 @@ pt-BR:
 
   time:
     formats:
-      default: "%A, %d de %B de %Y, %H:%M hs"
-      time: "%H:%M hs"
-      short: "%d/%m, %H:%M hs"
-      long: "%A, %d de %B de %Y, %H:%M hs"
+      default: "%A, %d de %B de %Y, %H:%M h"
+      time: "%H:%M h"
+      short: "%d/%m, %H:%M h"
+      long: "%A, %d de %B de %Y, %H:%M h"
       only_second: "%S"
       datetime:
         formats:
@@ -53,6 +52,9 @@ pt-BR:
       about_x_hours:
         one: 'aproximadamente 1 hora'
         other: 'aproximadamente %{count} horas'
+      x_hours:
+        one:   "1 hour"
+        other: "%{count} hours"
 
       x_days:
         one: '1 dia'
@@ -316,7 +318,6 @@ pt-BR:
   setting_time_format: Formato de hora
   setting_cross_project_issue_relations: Permitir relacionar tarefas entre projetos
   setting_issue_list_default_columns: Colunas padrão visíveis na lista de tarefas
-  setting_repositories_encodings: Codificação dos repositórios
   setting_emails_footer: Rodapé do e-mail
   setting_protocol: Protocolo
   setting_per_page_options: Número de itens exibidos por página
@@ -703,7 +704,6 @@ pt-BR:
   text_tip_issue_begin_day: tarefa inicia neste dia
   text_tip_issue_end_day: tarefa termina neste dia
   text_tip_issue_begin_end_day: tarefa inicia e termina neste dia
-  text_project_identifier_info: 'Letras minúsculas (a-z), números e hífens permitidos.<br />Uma vez salvo, o identificador não poderá ser alterado.'
   text_caracters_maximum: "máximo %{count} caracteres"
   text_caracters_minimum: "deve ter ao menos %{count} caracteres."
   text_length_between: "deve ter entre %{min} e %{max} caracteres."
@@ -961,7 +961,7 @@ pt-BR:
   setting_commit_logtime_enabled: Habilitar registro de horas
   notice_gantt_chart_truncated: O gráfico foi cortado por exceder o tamanho máximo de linhas que podem ser exibidas (%{max})
   setting_gantt_items_limit: Número máximo de itens exibidos no gráfico gatt
-  field_warn_on_leaving_unsaved: Alertar-me ao sarir de uma página sem salvar o texto
+  field_warn_on_leaving_unsaved: Alertar-me ao sair de uma página sem salvar o texto
   text_warn_on_leaving_unsaved: A página atual contem texto que não foi salvo e será perdido se você sair desta página.
   label_my_queries: Minhas consultas personalizadas
   text_journal_changed_no_detail: "%{label} atualizado(a)"
@@ -990,8 +990,7 @@ pt-BR:
   field_root_directory: Diretório raiz
   field_cvs_module: Módulo
   field_cvsroot: CVSROOT
-  text_git_repository_note: Bare and local repository (e.g. /gitrepo, c:\gitrepo)
-  text_mercurial_repository_note: "repositório local (ex.: /hgrepo, c:\hgrepo)"
+  text_mercurial_repository_note: "Repositório local (ex.: /hgrepo, c:\\hgrepo)"
   text_scm_command: Comando
   text_scm_command_version: Versão
   label_git_report_last_commit: Relatar última alteração para arquivos e diretórios
@@ -1001,3 +1000,64 @@ pt-BR:
   label_between: between
   setting_issue_group_assignment: Allow issue assignment to groups
   label_diff: diff
+  text_git_repository_note: Repository is bare and local (e.g. /gitrepo, c:\gitrepo)
+
+  description_query_sort_criteria_direction: Sort direction
+  description_project_scope: Escopo da pesquisa
+  description_filter: Filtro
+  description_user_mail_notification: Configuração de notificações por e-mail
+  description_date_from: Digita a data inicial
+  description_message_content: Conteúdo da mensagem
+  description_available_columns: Colunas disponíveis
+  description_date_range_interval: Escolha um período selecionando a data de início e fim
+  description_issue_category_reassign: Escolha uma categoria de tarefas
+  description_search: Searchfield
+  description_notes: Notas
+  description_date_range_list: Escolha um período a partira da lista
+  description_choose_project: Projetos
+  description_date_to: Digite a data final
+  description_query_sort_criteria_attribute: Sort attribute
+  description_wiki_subpages_reassign: Escolha uma nova página pai
+  description_selected_columns: Colunas selecionadas
+
+  label_parent_revision: Parent
+  label_child_revision: Child
+  error_scm_annotate_big_text_file: The entry cannot be annotated, as it exceeds the maximum text file size.
+  setting_default_issue_start_date_to_creation_date: Usar data corrente como data inicial para novas tarefas
+  button_edit_section: Edit this section
+  setting_repositories_encodings: Attachments and repositories encodings
+  description_all_columns: All Columns
+  button_export: Export
+  label_export_options: "%{export_format} export options"
+  error_attachment_too_big: This file cannot be uploaded because it exceeds the maximum allowed file size (%{max_size})
+  notice_failed_to_save_time_entries: "Failed to save %{count} time entrie(s) on %{total} selected: %{ids}."
+  label_x_issues:
+    zero:  0 tarefa
+    one:   1 tarefa
+    other: "%{count} tarefas"
+  label_repository_new: New repository
+  field_repository_is_default: Main repository
+  label_copy_attachments: Copy attachments
+  label_item_position: "%{position}/%{count}"
+  label_completed_versions: Completed versions
+  text_project_identifier_info: Only lower case letters (a-z), numbers, dashes and underscores are allowed.<br />Once saved, the identifier cannot be changed.
+  field_multiple: Multiple values
+  setting_commit_cross_project_ref: Allow issues of all the other projects to be referenced and fixed
+  text_issue_conflict_resolution_add_notes: Add my notes and discard my other changes
+  text_issue_conflict_resolution_overwrite: Apply my changes anyway (previous notes will be kept but some changes may be overwritten)
+  notice_issue_update_conflict: The issue has been updated by an other user while you were editing it.
+  text_issue_conflict_resolution_cancel: Discard all my changes and redisplay %{link}
+  permission_manage_related_issues: Manage related issues
+  field_ldap_filter: LDAP filter
+  label_search_for_watchers: Search for watchers to add
+  notice_account_deleted: Your account has been permanently deleted.
+  setting_unsubscribe: Allow users to delete their own account
+  button_delete_my_account: Delete my account
+  text_account_destroy_confirmation: |-
+    Are you sure you want to proceed?
+    Your account will be permanently deleted, with no way to reactivate it.
+  error_session_expired: Your session has expired. Please login again.
+  text_session_expiration_settings: "Warning: changing these settings may expire the current sessions including yours."
+  setting_session_lifetime: Session maximum lifetime
+  setting_session_timeout: Session inactivity timeout
+  label_session_expiration: Session expiration

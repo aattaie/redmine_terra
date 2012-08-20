@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2012  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,9 +21,11 @@ class Attachment < ActiveRecord::Base
   belongs_to :container, :polymorphic => true
   belongs_to :author, :class_name => "User", :foreign_key => "author_id"
 
-  validates_presence_of :container, :filename, :author
+  validates_presence_of :filename, :author
   validates_length_of :filename, :maximum => 255
   validates_length_of :disk_filename, :maximum => 255
+  validates_length_of :description, :maximum => 255, :allow_blank => true
+  validate :validate_max_file_size
 
   acts_as_event :title => :filename,
                 :url => Proc.new {|o| {:controller => 'attachments', :action => 'download', :id => o.id, :filename => o.filename}}
@@ -45,9 +47,29 @@ class Attachment < ActiveRecord::Base
   cattr_accessor :storage_path
   @@storage_path = Redmine::Configuration['attachments_storage_path'] || "#{Rails.root}/files"
 
-  def validate
-    if self.filesize > Setting.attachment_max_size.to_i.kilobytes
-      errors.add(:base, :too_long, :count => Setting.attachment_max_size.to_i.kilobytes)
+  before_save :files_to_final_location
+  after_destroy :delete_from_disk
+
+  def container_with_blank_type_check
+    if container_type.blank?
+      nil
+    else
+      container_without_blank_type_check
+    end
+  end
+  alias_method_chain :container, :blank_type_check unless method_defined?(:container_without_blank_type_check)
+
+  # Returns an unsaved copy of the attachment
+  def copy(attributes=nil)
+    copy = self.class.new
+    copy.attributes = self.attributes.dup.except("id", "downloads")
+    copy.attributes = attributes if attributes
+    copy
+  end
+
+  def validate_max_file_size
+    if @temp_file && self.filesize > Setting.attachment_max_size.to_i.kilobytes
+      errors.add(:base, l(:error_attachment_too_big, :max_size => Setting.attachment_max_size.to_i.kilobytes))
     end
   end
 
@@ -55,32 +77,49 @@ class Attachment < ActiveRecord::Base
     unless incoming_file.nil?
       @temp_file = incoming_file
       if @temp_file.size > 0
-        self.filename = sanitize_filename(@temp_file.original_filename)
-        self.disk_filename = Attachment.disk_filename(filename)
-        self.content_type = @temp_file.content_type.to_s.chomp
-        if content_type.blank?
+        if @temp_file.respond_to?(:original_filename)
+          self.filename = @temp_file.original_filename
+          self.filename.force_encoding("UTF-8") if filename.respond_to?(:force_encoding)
+        end
+        if @temp_file.respond_to?(:content_type)
+          self.content_type = @temp_file.content_type.to_s.chomp
+        end
+        if content_type.blank? && filename.present?
           self.content_type = Redmine::MimeType.of(filename)
         end
         self.filesize = @temp_file.size
       end
     end
   end
-	
+
   def file
     nil
   end
 
+  def filename=(arg)
+    write_attribute :filename, sanitize_filename(arg.to_s)
+    if new_record? && disk_filename.blank?
+      self.disk_filename = Attachment.disk_filename(filename)
+    end
+    filename
+  end
+
   # Copies the temporary file to its final location
   # and computes its MD5 hash
-  def before_save
+  def files_to_final_location
     if @temp_file && (@temp_file.size > 0)
       logger.info("Saving attachment '#{self.diskfile}' (#{@temp_file.size} bytes)")
       md5 = Digest::MD5.new
       File.open(diskfile, "wb") do |f|
-        buffer = ""
-        while (buffer = @temp_file.read(8192))
-          f.write(buffer)
-          md5.update(buffer)
+        if @temp_file.respond_to?(:read)
+          buffer = ""
+          while (buffer = @temp_file.read(8192))
+            f.write(buffer)
+            md5.update(buffer)
+          end
+        else
+          f.write(@temp_file)
+          md5.update(@temp_file)
         end
       end
       self.digest = md5.hexdigest
@@ -92,9 +131,11 @@ class Attachment < ActiveRecord::Base
     end
   end
 
-  # Deletes file on the disk
-  def after_destroy
-    File.delete(diskfile) if !filename.blank? && File.exist?(diskfile)
+  # Deletes the file from the file system if it's not referenced by other attachments
+  def delete_from_disk
+    if Attachment.first(:conditions => ["disk_filename = ? AND id <> ?", disk_filename, id]).nil?
+      delete_from_disk!
+    end
   end
 
   # Returns file's location on disk
@@ -107,19 +148,19 @@ class Attachment < ActiveRecord::Base
   end
 
   def project
-    container.project
+    container.try(:project)
   end
 
   def visible?(user=User.current)
-    container.attachments_visible?(user)
+    container && container.attachments_visible?(user)
   end
 
   def deletable?(user=User.current)
-    container.attachments_deletable?(user)
+    container && container.attachments_deletable?(user)
   end
 
   def image?
-    self.filename =~ /\.(jpe?g|gif|png)$/i
+    self.filename =~ /\.(bmp|gif|jpg|jpe|jpeg|png)$/i
   end
 
   def is_text?
@@ -135,43 +176,59 @@ class Attachment < ActiveRecord::Base
     File.readable?(diskfile)
   end
 
+  # Returns the attachment token
+  def token
+    "#{id}.#{digest}"
+  end
+
+  # Finds an attachment that matches the given token and that has no container
+  def self.find_by_token(token)
+    if token.to_s =~ /^(\d+)\.([0-9a-f]+)$/
+      attachment_id, attachment_digest = $1, $2
+      attachment = Attachment.first(:conditions => {:id => attachment_id, :digest => attachment_digest})
+      if attachment && attachment.container.nil?
+        attachment
+      end
+    end
+  end
+
   # Bulk attaches a set of files to an object
   #
   # Returns a Hash of the results:
   # :files => array of the attached files
   # :unsaved => array of the files that could not be attached
   def self.attach_files(obj, attachments)
-    attached = []
-    if attachments && attachments.is_a?(Hash)
-      attachments.each_value do |attachment|
-        file = attachment['file']
-        next unless file && file.size > 0
-        a = Attachment.create(:container => obj,
-                              :file => file,
-                              :description => attachment['description'].to_s.strip,
-                              :author => User.current)
-        obj.attachments << a
-        
-        if a.new_record?
-          obj.unsaved_attachments ||= []
-          obj.unsaved_attachments << a
-        else
-          attached << a
-        end
-      end
-    end
-    {:files => attached, :unsaved => obj.unsaved_attachments}
+    result = obj.save_attachments(attachments, User.current)
+    obj.attach_saved_attachments
+    result
   end
 
-private
+  def self.latest_attach(attachments, filename)
+    attachments.sort_by(&:created_on).reverse.detect {
+      |att| att.filename.downcase == filename.downcase
+     }
+  end
+
+  def self.prune(age=1.day)
+    attachments = Attachment.all(:conditions => ["created_on < ? AND (container_type IS NULL OR container_type = '')", Time.now - age])
+    attachments.each(&:destroy)
+  end
+
+  private
+
+  # Physically deletes the file from the file system
+  def delete_from_disk!
+    if disk_filename.present? && File.exist?(diskfile)
+      File.delete(diskfile)
+    end
+  end
+
   def sanitize_filename(value)
     # get only the filename, not the whole path
     just_filename = value.gsub(/^.*(\\|\/)/, '')
-    # NOTE: File.basename doesn't work right with Windows paths on Unix
-    # INCORRECT: just_filename = File.basename(value.gsub('\\\\', '/'))
 
-    # Finally, replace all non alphanumeric, hyphens or periods with underscore
-    @filename = just_filename.gsub(/[^\w\.\-]/,'_')
+    # Finally, replace invalid characters with underscore
+    @filename = just_filename.gsub(/[\/\?\%\*\:\|\"\'<>]+/, '_')
   end
 
   # Returns an ASCII or hashed filename
