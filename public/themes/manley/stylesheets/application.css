@@ -110,21 +110,22 @@ a.issue.status-6, a.issue.status-6:link, a.issue.status-6:visited, a.issue.statu
 
 li.issue.status-9, tr.issue.status-9 { font-style:italic;}
 
-#roadmap .issue, #panes .issue { background-repeat: no-repeat; padding: 2px 0 3px 20px;}
+#roadmap .issue, #panes .issue, .list .issue { background-repeat: no-repeat; padding: 2px 0 3px 20px;}
 .issues .issue  { background-repeat: no-repeat; background-position: left bottom ; padding: 2px 0 3px 20px;}
 .issues .issue td {height: 30px;}
 
 .list .issue.status-1 {background-image: url(../images/new.png)}
-.list .issue.status-2 {background-image: url(../images/inprogress.png)}
-.list .issue.status-3 {background-image: url(../images/resolved.png)}
-.list .issue.status-4 {background-image: url(../images/feedback.png)}
-.list .issue.status-5 {background-image: url(../images/readyforrelease.png)}
-.list .issue.status-6 {background-image: url(../images/releasedforapproval.png)}
-.list .issue.status-7 {background-image: url(../images/notapproved.png)}
-.list .issue.status-8 {background-image: url(../images/approved.png)}
-.list .issue.status-9 {background-image: url(../images/onhold.png)}
-.list .issue.status-10 {background-image: url(../images/rejected.png)}
-.list .issue.status-11 {background-image: url(../images/closed.png)}
+.list .issue.status-2 {background-image: url(../images/checkedin.png)}
+.list .issue.status-3 {background-image: url(../images/inprogress.png)}
+.list .issue.status-4 {background-image: url(../images/resolved.png)}
+.list .issue.status-5 {background-image: url(../images/feedback.png)}
+.list .issue.status-6 {background-image: url(../images/readyforrelease.png)}
+.list .issue.status-7 {background-image: url(../images/releasedforapproval.png)}
+.list .issue.status-8 {background-image: url(../images/notapproved.png)}
+.list .issue.status-9 {background-image: url(../images/approved.png)}
+.list .issue.status-10 {background-image: url(../images/onhold.png)}
+.list .issue.status-11 {background-image: url(../images/rejected.png)}
+.list .issue.status-12 {background-image: url(../images/closed.png)}
 
 .issue:not(.assigned-to-me) { background-color: #ffffbb;}
 
