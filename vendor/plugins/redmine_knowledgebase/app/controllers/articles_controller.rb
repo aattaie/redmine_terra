@@ -4,55 +4,52 @@ class ArticlesController < KnowledgebaseController
   helper :attachments
   include AttachmentsHelper
   include FaceboxRender
+
+  #Authorize against global permissions defined in init.rb
+  before_filter :authorize_global
   
   def new
-    @article = Article.new
+    @article = KbArticle.new
     @default_category = params[:category_id]
     @article.category_id = params[:category_id]
   end
   
   def rate
-    @article = Article.find(params[:article_id])
+    @article = KbArticle.find(params[:article_id])
     @article.rate params[:rating].to_i
     render :partial => "rating", :locals => {:article => @article}
   end
   
   def create    
-    @article = Article.new(params[:article])
+    @article = KbArticle.new(params[:article])
     @article.category_id = params[:category_id]
     @article.author_id = User.current.id
     if @article.save
       attachments = attach(@article, params[:attachments])
-      # XXX Commented this out for now as it's not available in the
-      # currently released (0.9) version of Redmine
-      # render_attachment_warning_if_needed(@article)
-      flash[:notice] = "Created Article " + @article.title
-      redirect_to({ :controller => 'knowledgebase', :action => 'index' })
+      flash[:notice] = l(:label_article_created, :title => @article.title)
+      redirect_to({ :controller => 'categories', :action => 'show', :id => @article.category_id })
     else
       render(:action => 'new')
     end
   end
   
   def show
-    @article = Article.find(params[:id] || params[:article_id])
+    @article = KbArticle.find(params[:id] || params[:article_id])
     @article.view request.remote_addr, User.current
     @attachments = @article.attachments.find(:all, :order => "created_on DESC")
     @comments = @article.comments
   end
   
   def edit
-    @article = Article.find(params[:id])
+    @article = KbArticle.find(params[:id])
   end
   
   def update
-    @article = Article.find(params[:id])
+    @article = KbArticle.find(params[:id])
     params[:article][:category_id] = params[:category_id]
     if @article.update_attributes(params[:article])
       attachments = attach(@article, params[:attachments])
-      # XXX Commented this out for now as it's not available in the
-      # currently released (0.9) version of Redmine
-      # render_attachment_warning_if_needed(@article)
-      flash[:notice] = "Article Updated"
+      flash[:notice] = l(:label_article_updated)
       redirect_to({ :action => 'show', :id => @article.id })
     else
       render({:action => 'edit', :id => @article.id})
@@ -60,7 +57,7 @@ class ArticlesController < KnowledgebaseController
   end
   
   def add_comment
-    @article = Article.find(params[:id])
+    @article = KbArticle.find(params[:id])
     @comment = Comment.new(params[:comment])
     @comment.author = User.current || nil
     if @article.comments << @comment
@@ -73,30 +70,27 @@ class ArticlesController < KnowledgebaseController
   end
 
   def destroy_comment
-    @article = Article.find(params[:id])
+    @article = KbArticle.find(params[:id])
     @article.comments.find(params[:comment_id]).destroy
     redirect_to :action => 'show', :id => @article
   end
   
   def destroy
-    @article = Article.find(params[:id])
+    @article = KbArticle.find(params[:id])
     @article.destroy
-    flash[:notice] = "Article Removed"
+    flash[:notice] = l(:label_article_removed)
     redirect_to({ :controller => 'knowledgebase', :action => 'index' })
   end
 
   def add_attachment
-    @article = Article.find(params[:id])
-    attachments = attach(@article, params[:attachments])
-    # XXX Commented this out for now as it's not available in the
-    # currently released (0.9) version of Redmine
-    # render_attachment_warning_if_needed(@article)
+    @article = KbArticle.find(params[:id])
+    attachments = attach(@article, params[:attachments])    
     redirect_to({ :action => 'show', :id => @article.id })
   end
   
   def tagged
     @tag = params[:id]
-    @list = Article.find_tagged_with(@tag)
+    @list = KbArticle.find_tagged_with(@tag)
   end
 
   def preview
@@ -110,14 +104,17 @@ class ArticlesController < KnowledgebaseController
     render_to_facebox
   end
 
+#######
 private
-  
+#######
+
   # Abstract attachment method to resolve how files should be attached to a model.
   # In newer versions of Redmine, the attach_files functionality was moved
   # from the application controller to the attachment model.
   def attach(target, attachments)
     if Attachment.respond_to?(:attach_files)
       Attachment.attach_files(target, attachments)
+      render_attachment_warning_if_needed(target)
     else
       attach_files(target, attachments)
     end
