@@ -7,7 +7,7 @@
 
 <%= render :partial => 'form' %>
 
-<%= call_hook(:plugin_timesheet_views_timesheets_report_before_time_entries, { :timesheet => @timesheet }) %>
+<%#= call_hook(:plugin_timesheet_views_timesheets_report_before_time_entries, { :timesheet => @timesheet }) %>
 
 <% form_tag({}, { :id => 'time_entries'}) do -%>
 <% if @timesheet.time_entries.length > 0 %>
@@ -23,7 +23,7 @@
    <%= render :partial => 'by_issue', :locals => {:entry => entry, :name => entryname, :total => 0 } %>
 <% else %>
 <%# Default to :project %>
-   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3> 
+   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
    <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
 
 <% end
@@ -37,13 +37,13 @@ end # form_tag
 <%= stylesheet_link_tag 'context_menu' %>
 <%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet_plugin", :media => 'all' %>
 <%# TODO: Typo on hook %>
-<%= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
-<%= call_hook(:plugin_timesheet_views_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
+<%#= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
+<%#= call_hook(:plugin_timesheet_views_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
 <% end %>
 
 <div id="context-menu" style="display: none;"></div>
 <%= javascript_tag "new ContextMenu('#{url_for(:controller => 'timesheet', :action => 'context_menu')}')" %>
 
 <%# TODO: Typo on hook %>
-<%= call_hook(:plugin_timesheet_view_timesheets_report_bottom, { :timesheet => @timesheet }) %>
-<%= call_hook(:plugin_timesheet_views_timesheets_report_bottom, { :timesheet => @timesheet }) %>
+<%#= call_hook(:plugin_timesheet_view_timesheets_report_bottom, { :timesheet => @timesheet }) %>
+<%#= call_hook(:plugin_timesheet_views_timesheets_report_bottom, { :timesheet => @timesheet }) %>
