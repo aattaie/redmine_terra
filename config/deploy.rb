@@ -1,14 +1,14 @@
 require "bundler/capistrano"
 
 set :application, "redmine"
-set :repository,  "git@s16423584.onlinehome-server.info:redmine.git"
+set :repository,  "git@s17629743.onlinehome-server.info:redmine.git"
 
 set :scm, :git
 # Or: `accurev`, `bzr`, `cvs`, `darcs`, `git`, `mercurial`, `perforce`, `subversion` or `none`
 
-role :web, "terracloud2"                          # Your HTTP server, Apache/etc
-role :app, "terracloud2"                          # This may be the same as your `Web` server
-role :db,  "terracloud2", :primary => true # This is where Rails migrations will run
+role :web, "terracloud3"                          # Your HTTP server, Apache/etc
+role :app, "terracloud3"                          # This may be the same as your `Web` server
+role :db,  "terracloud3", :primary => true # This is where Rails migrations will run
 
 set :deploy_via, :remote_cache
 set :use_sudo, false
@@ -17,7 +17,7 @@ set :branch, "terrabase"
 set :deploy_to, "/home/www/redmine"
 set :rails_env, "production"
 
-ssh_options[:keys] = "/home/tracey/.ssh/id_dsa"
+ssh_options[:keys] = "/home/tracey/.ssh/id_rsa"
 
 set :rvm_ruby_string, 'ruby-1.9.3-p194@redmine'
 require "rvm/capistrano"
