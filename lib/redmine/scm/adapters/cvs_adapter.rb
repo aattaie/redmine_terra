@@ -222,8 +222,8 @@ module Redmine
                       :author  => author,
                       :message => commit_log.chomp,
                       :paths => [{
-                        :revision => revision,
-                        :branch   => revBranch,
+                        :revision => revision.dup,
+                        :branch   => revBranch.dup,
                         :path     => scm_iconv('UTF-8', @path_encoding, entry_path),
                         :name     => scm_iconv('UTF-8', @path_encoding, entry_name),
                         :kind     => 'file',
@@ -335,13 +335,13 @@ module Redmine
         # :pserver:anonymous@foo.bar:/path => /path
         # :ext:cvsservername:/path => /path
         def root_url_path
-          root_url.to_s.gsub(/^:.+:\d*/, '')
+          root_url.to_s.gsub(%r{^:.+?(?=/)}, '')
         end
 
         # convert a date/time into the CVS-format
         def time_to_cvstime(time)
           return nil if time.nil?
-          time = Time.now if time == 'HEAD'
+          time = Time.now if (time.kind_of?(String) && time == 'HEAD')
 
           unless time.kind_of? Time
             time = Time.parse(time)

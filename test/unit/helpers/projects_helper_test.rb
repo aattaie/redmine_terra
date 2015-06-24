@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,7 +20,9 @@ require File.expand_path('../../../test_helper', __FILE__)
 class ProjectsHelperTest < ActionView::TestCase
   include ApplicationHelper
   include ProjectsHelper
+  include Redmine::I18n
   include ERB::Util
+  include Rails.application.routes.url_helpers
 
   fixtures :projects, :trackers, :issue_statuses, :issues,
            :enumerations, :users, :issue_categories,
@@ -29,8 +31,7 @@ class ProjectsHelperTest < ActionView::TestCase
            :member_roles,
            :members,
            :groups_users,
-           :enabled_modules,
-           :workflows
+           :enabled_modules
 
   def setup
     super
@@ -41,12 +42,19 @@ class ProjectsHelperTest < ActionView::TestCase
   def test_link_to_version_within_project
     @project = Project.find(2)
     User.current = User.find(1)
-    assert_equal '<a href="/versions/5">Alpha</a>', link_to_version(Version.find(5))
+    assert_equal '<a href="/versions/5" title="07/01/2006">Alpha</a>', link_to_version(Version.find(5))
   end
 
   def test_link_to_version
     User.current = User.find(1)
-    assert_equal '<a href="/versions/5">OnlineStore - Alpha</a>', link_to_version(Version.find(5))
+    assert_equal '<a href="/versions/5" title="07/01/2006">OnlineStore - Alpha</a>', link_to_version(Version.find(5))
+  end
+
+  def test_link_to_version_without_effective_date
+    User.current = User.find(1)
+    version = Version.find(5)
+    version.effective_date = nil
+    assert_equal '<a href="/versions/5">OnlineStore - Alpha</a>', link_to_version(version)
   end
 
   def test_link_to_private_version
@@ -72,6 +80,6 @@ class ProjectsHelperTest < ActionView::TestCase
 
   def test_version_options_for_select_with_no_versions
     assert_equal '', version_options_for_select([])
-    assert_equal '<option value="1" selected="selected">0.1</option>', version_options_for_select([], Version.find(1))
+    assert_equal '', version_options_for_select([], Version.find(1))
   end
 end

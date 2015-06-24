@@ -1,5 +1,7 @@
+# encoding: utf-8
+#
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,73 +31,84 @@ class PrincipalTest < ActiveSupport::TestCase
   end
 
   def test_member_of_scope_should_return_the_union_of_all_members
-    projects = Project.find_all_by_id(1, 2)
-    assert_equal projects.map(&:principals).flatten.sort, Principal.member_of(projects).sort
+    projects = Project.find([1])
+    assert_equal [3, 2], Principal.member_of(projects).sort.map(&:id)
+    projects = Project.find([1, 2])
+    assert_equal [3, 2, 8, 11], Principal.member_of(projects).sort.map(&:id)
+  end
+
+  def test_member_of_scope_should_be_empty_for_no_projects
+    assert_equal [], Principal.member_of([]).sort
   end
 
   def test_not_member_of_scope_should_return_users_that_have_no_memberships
-    projects = Project.find_all_by_id(1, 2)
-    expected = (Principal.all - projects.map(&:memberships).flatten.map(&:principal)).sort
-    assert_equal expected, Principal.not_member_of(projects).sort
+    [[1], [1, 2]].each do |ids|
+      projects = Project.find(ids)
+      assert_equal ids.size, projects.count
+      expected = (Principal.all - projects.map(&:memberships).flatten.map(&:principal)).sort
+      assert_equal expected, Principal.not_member_of(projects).sort
+    end
   end
 
-  context "#like" do
-    setup do
-      Principal.generate!(:login => 'login')
-      Principal.generate!(:login => 'login2')
+  def test_not_member_of_scope_should_be_empty_for_no_projects
+    assert_equal [], Principal.not_member_of([]).sort
+  end
 
-      Principal.generate!(:firstname => 'firstname')
-      Principal.generate!(:firstname => 'firstname2')
+  def test_sorted_scope_should_sort_users_before_groups
+    scope = Principal.where(:type => ['User', 'Group'])
+    users = scope.select {|p| p.is_a?(User)}.sort
+    groups = scope.select {|p| p.is_a?(Group)}.sort
 
-      Principal.generate!(:lastname => 'lastname')
-      Principal.generate!(:lastname => 'lastname2')
+    assert_equal (users + groups).map(&:name).map(&:downcase),
+                 scope.sorted.map(&:name).map(&:downcase)
+  end
 
-      Principal.generate!(:mail => 'mail@example.com')
-      Principal.generate!(:mail => 'mail2@example.com')
+  test "like scope should search login" do
+    results = Principal.like('jsmi')
 
-      @palmer = Principal.generate!(:firstname => 'David', :lastname => 'Palmer')
-    end
+    assert results.any?
+    assert results.all? {|u| u.login.match(/jsmi/i) }
+  end
 
-    should "search login" do
-      results = Principal.like('login')
+  test "like scope should search firstname" do
+    results = Principal.like('john')
 
-      assert_equal 2, results.count
-      assert results.all? {|u| u.login.match(/login/) }
-    end
+    assert results.any?
+    assert results.all? {|u| u.firstname.match(/john/i) }
+  end
 
-    should "search firstname" do
-      results = Principal.like('firstname')
+  test "like scope should search lastname" do
+    results = Principal.like('smi')
 
-      assert_equal 2, results.count
-      assert results.all? {|u| u.firstname.match(/firstname/) }
-    end
+    assert results.any?
+    assert results.all? {|u| u.lastname.match(/smi/i) }
+  end
 
-    should "search lastname" do
-      results = Principal.like('lastname')
+  test "like scope should search mail" do
+    results = Principal.like('somenet')
 
-      assert_equal 2, results.count
-      assert results.all? {|u| u.lastname.match(/lastname/) }
-    end
+    assert results.any?
+    assert results.all? {|u| u.mail.match(/somenet/i) }
+  end
 
-    should "search mail" do
-      results = Principal.like('mail')
+  test "like scope should search firstname and lastname" do
+    results = Principal.like('john smi')
 
-      assert_equal 2, results.count
-      assert results.all? {|u| u.mail.match(/mail/) }
-    end
+    assert_equal 1, results.count
+    assert_equal User.find(2), results.first
+  end
 
-    should "search firstname and lastname" do
-      results = Principal.like('david palm')
+  test "like scope should search lastname and firstname" do
+    results = Principal.like('smith joh')
 
-      assert_equal 1, results.count
-      assert_equal @palmer, results.first
-    end
+    assert_equal 1, results.count
+    assert_equal User.find(2), results.first
+  end
 
-    should "search lastname and firstname" do
-      results = Principal.like('palmer davi')
-
-      assert_equal 1, results.count
-      assert_equal @palmer, results.first
-    end
+  def test_like_scope_with_cyrillic_name
+    user = User.generate!(:firstname => 'Соболев', :lastname => 'Денис')
+    results = Principal.like('Собо')
+    assert_equal 1, results.count
+    assert_equal user, results.first
   end
 end

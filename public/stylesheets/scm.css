@@ -34,32 +34,38 @@ li.change .copied-from:before { content: " - "}
 #changes-legend { float: right; font-size: 0.8em; margin: 0; }
 #changes-legend li { float: left; background-position: 5px 0; }
 
-table.filecontent { border: 1px solid #ccc;  border-collapse: collapse; width:98%; background-color: #fafafa; }
-table.filecontent th { border: 1px solid #ccc; background-color: #eee; }
-table.filecontent th.filename { background-color: #e4e4d4; text-align: left; padding: 0.2em;}
+table.filecontent { border: 1px solid #e2e2e2;  border-collapse: collapse; width:98%; background-color: #fafafa; }
+table.filecontent tbody {font-family:"Liberation Mono", Courier, monospace; font-size:12px;}
+table.filecontent th { border: 1px solid #e2e2e2; background-color: #eee; }
+table.filecontent th.filename { background-color: #e4e4d4; text-align: left; padding:5px;}
 table.filecontent tr.spacing th { text-align:center; }
 table.filecontent tr.spacing td { height: 0.4em; background: #EAF2F5;}
 table.filecontent th.line-num {
-    border: 1px solid #d7d7d7;
-    font-size: 0.8em;
+    border: 1px solid #e2e2e2;
     text-align: right;
     width: 2%;
-    padding-right: 3px;
+    padding: 0 3px 0 0;
     color: #999;
     user-select: none;
     -moz-user-select: none;
     -o-user-select: none;
     -ms-user-select: none;
     -webkit-user-select: none;
+    font-weight:normal;
 }
 table.filecontent th.line-num a {
     text-decoration: none;
     color: inherit;
 }
+table.filecontent td.line-code {padding: 0 0 0 4px;}
 table.filecontent td.line-code pre {
     margin: 0px;
     white-space: pre-wrap;
+    font-family:"Liberation Mono", Courier, monospace; font-size:12px;
 }
+
+table.filecontent tr:target th.line-num { background-color:#E0E0E0; color: #777; }
+table.filecontent tr:target td.line-code { background-color:#DDEEFF; }
 
 /* 12 different colors for the annonate view */
 table.annotate tr.bloc-0 {background: #FFFFBF;}
@@ -76,6 +82,7 @@ table.annotate tr.bloc-10 {background: #FFBFDC;}
 table.annotate tr.bloc-11 {background: #BFE4FF;}
 
 table.annotate td.revision {
+    padding:0;
     text-align: center;
     width: 2%;
     padding-left: 1em;
@@ -83,6 +90,7 @@ table.annotate td.revision {
 }
 
 table.annotate td.author {
+    padding:0;
     text-align: center;
     border-right: 1px solid #d7d7d7;
     white-space: nowrap;
@@ -90,7 +98,6 @@ table.annotate td.author {
     padding-right: 1em;
     width: 3%;
     background: inherit;
-    font-size: 90%;
 }
 
 table.annotate td.line-code { background-color: #fafafa; }
@@ -98,6 +105,7 @@ table.annotate td.line-code { background-color: #fafafa; }
 div.action_M { background: #fd8 }
 div.action_D { background: #f88 }
 div.action_A { background: #bfb }
+<<<<<<< HEAD
 
 /************* CodeRay styles *************/
 .syntaxhl div {display: inline;}
@@ -196,3 +204,5 @@ div.action_A { background: #bfb }
 .syntaxhl .delete .delete { color: #c00; background:transparent; font-weight:bold }
 .syntaxhl .change .change { color: #88f }
 .syntaxhl .head .head { color: #f4f }
+=======
+>>>>>>> 2.6.5

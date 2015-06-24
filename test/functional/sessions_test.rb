@@ -1,5 +1,9 @@
 # Redmine - project management software
+<<<<<<< HEAD
 # Copyright (C) 2006-2012  Jean-Philippe Lang
+=======
+# Copyright (C) 2006-2015  Jean-Philippe Lang
+>>>>>>> 2.6.5
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,6 +24,11 @@ require File.expand_path('../../test_helper', __FILE__)
 class SessionStartTest < ActionController::TestCase
   tests AccountController
 
+<<<<<<< HEAD
+=======
+  fixtures :users
+
+>>>>>>> 2.6.5
   def test_login_should_set_session_timestamps
     post :login, :username => 'jsmith', :password => 'jsmith'
     assert_response 302
@@ -30,8 +39,16 @@ class SessionStartTest < ActionController::TestCase
 end
 
 class SessionsTest < ActionController::TestCase
+<<<<<<< HEAD
   tests WelcomeController
 
+=======
+  include Redmine::I18n
+  tests WelcomeController
+
+  fixtures :users
+
+>>>>>>> 2.6.5
   def test_atime_from_user_session_should_be_updated
     created = 2.hours.ago.utc.to_i
     get :index, {}, {:user_id => 2, :ctime => created, :atime => created}
@@ -51,14 +68,22 @@ class SessionsTest < ActionController::TestCase
   def test_user_session_without_ctime_should_be_reset_if_lifetime_enabled
     with_settings :session_lifetime => '720' do
       get :index, {}, {:user_id => 2}
+<<<<<<< HEAD
       assert_redirected_to '/login'
+=======
+      assert_redirected_to 'http://test.host/login?back_url=http%3A%2F%2Ftest.host%2F'
+>>>>>>> 2.6.5
     end
   end
 
   def test_user_session_with_expired_ctime_should_be_reset_if_lifetime_enabled
     with_settings :session_timeout => '720' do
       get :index, {}, {:user_id => 2, :atime => 2.days.ago.utc.to_i}
+<<<<<<< HEAD
       assert_redirected_to '/login'
+=======
+      assert_redirected_to 'http://test.host/login?back_url=http%3A%2F%2Ftest.host%2F'
+>>>>>>> 2.6.5
     end
   end
 
@@ -72,14 +97,22 @@ class SessionsTest < ActionController::TestCase
   def test_user_session_without_atime_should_be_reset_if_timeout_enabled
     with_settings :session_timeout => '60' do
       get :index, {}, {:user_id => 2}
+<<<<<<< HEAD
       assert_redirected_to '/login'
+=======
+      assert_redirected_to 'http://test.host/login?back_url=http%3A%2F%2Ftest.host%2F'
+>>>>>>> 2.6.5
     end
   end
 
   def test_user_session_with_expired_atime_should_be_reset_if_timeout_enabled
     with_settings :session_timeout => '60' do
       get :index, {}, {:user_id => 2, :atime => 4.hours.ago.utc.to_i}
+<<<<<<< HEAD
       assert_redirected_to '/login'
+=======
+      assert_redirected_to 'http://test.host/login?back_url=http%3A%2F%2Ftest.host%2F'
+>>>>>>> 2.6.5
     end
   end
 
@@ -104,6 +137,23 @@ class SessionsTest < ActionController::TestCase
     end
   end
 
+<<<<<<< HEAD
+=======
+  def test_expired_user_session_should_set_locale
+    set_language_if_valid 'it'
+    user = User.find(2)
+    user.language = 'fr'
+    user.save!
+
+    with_settings :session_timeout => '60' do
+      get :index, {}, {:user_id => user.id, :atime => 4.hours.ago.utc.to_i}
+      assert_redirected_to 'http://test.host/login?back_url=http%3A%2F%2Ftest.host%2F'
+      assert_include "Veuillez vous reconnecter", flash[:error]
+      assert_equal :fr, current_language
+    end
+  end
+
+>>>>>>> 2.6.5
   def test_anonymous_session_should_not_be_reset
     with_settings :session_lifetime => '720', :session_timeout => '60' do
       get :index

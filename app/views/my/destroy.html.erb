@@ -2,10 +2,18 @@
 <div class="warning">
 <p><%= simple_format l(:text_account_destroy_confirmation)%></p>
 <p>
+<<<<<<< HEAD
     <% form_tag({}) do %>
     <label><%= check_box_tag 'confirm', 1 %> <%= l(:general_text_Yes) %></label>
     <%= submit_tag l(:button_delete_my_account) %> |
 		<%= link_to l(:button_cancel), :action => 'account' %>
     <% end %>
+=======
+  <%= form_tag({}) do %>
+    <label><%= check_box_tag 'confirm', 1 %> <%= l(:general_text_Yes) %></label>
+    <%= submit_tag l(:button_delete_my_account) %> |
+    <%= link_to l(:button_cancel), :action => 'account' %>
+  <% end %>
+>>>>>>> 2.6.5
 </p>
 </div>

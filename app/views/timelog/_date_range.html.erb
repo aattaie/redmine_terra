@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <fieldset id="date-range" class="collapsible">
 <legend onclick="toggleFieldset(this);"><%= l(:label_date_range) %></legend>
 <div>
@@ -20,19 +21,41 @@
             text_field_tag('to', @to, :size => 10, :disabled => !@free_period) + calendar_for('to'))).html_safe %>
 </span>
 </p>
+=======
+<div id="query_form_with_buttons" class="hide-when-print">
+<div id="query_form_content">
+  <fieldset id="filters" class="collapsible <%= @query.new_record? ? "" : "collapsed" %>">
+    <legend onclick="toggleFieldset(this);"><%= l(:label_filter_plural) %></legend>
+    <div style="<%= @query.new_record? ? "" : "display: none;" %>">
+      <%= render :partial => 'queries/filters', :locals => {:query => @query} %>
+    </div>
+  </fieldset>
+  <fieldset class="collapsible collapsed">
+    <legend onclick="toggleFieldset(this);"><%= l(:label_options) %></legend>
+    <div style="display: none;">
+      <table>
+        <tr>
+          <td><%= l(:field_column_names) %></td>
+          <td><%= render_query_columns_selection(@query) %></td>
+        </tr>
+      </table>
+    </div>
+  </fieldset>
+>>>>>>> 2.6.5
 </div>
-</fieldset>
-<p class="buttons">
-  <%= link_to_function l(:button_apply), '$("query_form").submit()', :class => 'icon icon-checked' %>
-  <%= link_to l(:button_clear), {:controller => controller_name, :action => action_name, :project_id => @project, :issue_id => @issue}, :class => 'icon icon-reload' %>
-</p>
 
-<div class="tabs">
-<% url_params = @free_period ? { :from => @from, :to => @to } : { :period => params[:period] } %>
+<p class="buttons">
+  <%= link_to_function l(:button_apply), 'submit_query_form("query_form")', :class => 'icon icon-checked' %>
+  <%= link_to l(:button_clear), {:project_id => @project, :issue_id => @issue}, :class => 'icon icon-reload'  %>
+</p>
+</div>
+
+<div class="tabs hide-when-print">
+<% query_params = params.slice(:f, :op, :v, :sort) %>
 <ul>
-    <li><%= link_to(l(:label_details), url_params.merge({:controller => 'timelog', :action => 'index', :project_id => @project, :issue_id => @issue }),
-                                       :class => (@controller.action_name == 'index' ? 'selected' : nil)) %></li>
-    <li><%= link_to(l(:label_report), url_params.merge({:controller => 'timelog', :action => 'report', :project_id => @project, :issue_id => @issue}),
-                                       :class => (@controller.action_name == 'report' ? 'selected' : nil)) %></li>
+    <li><%= link_to(l(:label_details), _time_entries_path(@project, @issue, query_params),
+                                       :class => (action_name == 'index' ? 'selected' : nil)) %></li>
+    <li><%= link_to(l(:label_report), _report_time_entries_path(@project, @issue, query_params),
+                                       :class => (action_name == 'report' ? 'selected' : nil)) %></li>
 </ul>
 </div>

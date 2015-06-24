@@ -6,7 +6,7 @@
 <p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
 
-<% form_tag({}) do %>
+<%= form_tag({}) do %>
 <table class="list">
 <thead>
   <tr>
@@ -36,7 +36,7 @@
 <% end -%>
 </tbody>
 </table>
-<p><%= submit_tag(l(:button_update)) %></p>
+<p><%= submit_tag(l(:button_save)) %></p>
 <% end %>
 
 <% end %>

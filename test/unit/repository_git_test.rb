@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,6 +53,37 @@ class RepositoryGitTest < ActiveSupport::TestCase
     end
   end
 
+  def test_nondefault_repo_with_blank_identifier_destruction
+    Repository.delete_all
+
+    repo1 = Repository::Git.new(
+                          :project    => @project,
+                          :url        => REPOSITORY_PATH,
+                          :identifier => '',
+                          :is_default => true
+                        )
+    assert repo1.save
+    repo1.fetch_changesets
+
+    repo2 = Repository::Git.new(
+                          :project    => @project,
+                          :url        => REPOSITORY_PATH,
+                          :identifier => 'repo2',
+                          :is_default => true
+                    )
+    assert repo2.save
+    repo2.fetch_changesets
+
+    repo1.reload
+    repo2.reload
+    assert !repo1.is_default?
+    assert  repo2.is_default?
+
+    assert_difference 'Repository.count', -1 do
+      repo1.destroy
+    end
+  end
+
   def test_blank_path_to_repository_error_message
     set_language_if_valid 'en'
     repo = Repository::Git.new(
@@ -97,6 +128,11 @@ class RepositoryGitTest < ActiveSupport::TestCase
       assert_equal true, klass.scm_available
     end
 
+    def test_entries
+      entries = @repository.entries
+      assert_kind_of Redmine::Scm::Adapters::Entries, entries
+    end
+
     def test_fetch_changesets_from_scratch
       assert_nil @repository.extra_info
 
@@ -105,7 +141,7 @@ class RepositoryGitTest < ActiveSupport::TestCase
       @project.reload
 
       assert_equal NUM_REV, @repository.changesets.count
-      assert_equal 39, @repository.changes.count
+      assert_equal 39, @repository.filechanges.count
 
       commit = @repository.changesets.find_by_revision("7234cb2750b63f47bff735edc50a1c0a433c2518")
       assert_equal "7234cb2750b63f47bff735edc50a1c0a433c2518", commit.scmid
@@ -113,10 +149,10 @@ class RepositoryGitTest < ActiveSupport::TestCase
       assert_equal "jsmith <jsmith@foo.bar>", commit.committer
       assert_equal User.find_by_login('jsmith'), commit.user
       # TODO: add a commit with commit time <> author time to the test repository
-      assert_equal "2007-12-14 09:22:52".to_time, commit.committed_on
+      assert_equal Time.gm(2007, 12, 14, 9, 22, 52), commit.committed_on
       assert_equal "2007-12-14".to_date, commit.commit_date
-      assert_equal 3, commit.changes.count
-      change = commit.changes.sort_by(&:path).first
+      assert_equal 3, commit.filechanges.count
+      change = commit.filechanges.sort_by(&:path).first
       assert_equal "README", change.path
       assert_equal nil, change.from_path
       assert_equal "A", change.action
@@ -210,6 +246,40 @@ class RepositoryGitTest < ActiveSupport::TestCase
       assert_equal NUM_REV - 5, @repository.changesets.count
       h2 = @repository.extra_info["heads"].dup
       assert_equal h1, h2
+    end
+
+    def test_keep_extra_report_last_commit_in_clear_changesets
+      assert_nil @repository.extra_info
+      h = {}
+      h["extra_report_last_commit"] = "1"
+      @repository.merge_extra_info(h)
+      @repository.save
+      @project.reload
+
+      assert_equal 0, @repository.changesets.count
+      @repository.fetch_changesets
+      @project.reload
+
+      assert_equal NUM_REV, @repository.changesets.count
+      @repository.send(:clear_changesets)
+      assert_equal 1, @repository.extra_info.size
+      assert_equal "1", @repository.extra_info["extra_report_last_commit"]
+    end
+
+    def test_refetch_after_clear_changesets
+      assert_nil @repository.extra_info
+      assert_equal 0, @repository.changesets.count
+      @repository.fetch_changesets
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
+
+      @repository.send(:clear_changesets)
+      @project.reload
+      assert_equal 0, @repository.changesets.count
+
+      @repository.fetch_changesets
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
     end
 
     def test_parents

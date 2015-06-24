@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ class MailHandler < ActionMailer::Base
   attr_reader :email, :user
 
   def self.receive(email, options={})
-    @@handler_options = options.dup
+    @@handler_options = options.deep_dup
 
     @@handler_options[:issue] ||= {}
 
@@ -38,14 +38,50 @@ class MailHandler < ActionMailer::Base
     # Status overridable by default
     @@handler_options[:allow_override] << 'status' unless @@handler_options[:issue].has_key?(:status)
 
-    @@handler_options[:no_permission_check] = (@@handler_options[:no_permission_check].to_s == '1' ? true : false)
-    super email
+    @@handler_options[:no_account_notice] = (@@handler_options[:no_account_notice].to_s == '1')
+    @@handler_options[:no_notification] = (@@handler_options[:no_notification].to_s == '1')
+    @@handler_options[:no_permission_check] = (@@handler_options[:no_permission_check].to_s == '1')
+
+    email.force_encoding('ASCII-8BIT') if email.respond_to?(:force_encoding)
+    super(email)
+  end
+
+  # Receives an email and rescues any exception
+  def self.safe_receive(*args)
+    receive(*args)
+  rescue => e
+    logger.error "An unexpected error occurred when receiving email: #{e.message}" if logger
+    return false
+  end
+
+<<<<<<< HEAD
+  cattr_accessor :ignored_emails_headers
+  @@ignored_emails_headers = {
+    'X-Auto-Response-Suppress' => 'oof',
+    'Auto-Submitted' => /^auto-/
+=======
+  # Extracts MailHandler options from environment variables
+  # Use when receiving emails with rake tasks
+  def self.extract_options_from_env(env)
+    options = {:issue => {}}
+    %w(project status tracker category priority).each do |option|
+      options[:issue][option.to_sym] = env[option] if env[option]
+    end
+    %w(allow_override unknown_user no_permission_check no_account_notice default_group).each do |option|
+      options[option.to_sym] = env[option] if env[option]
+    end
+    options
+  end
+
+  def logger
+    Rails.logger
   end
 
   cattr_accessor :ignored_emails_headers
   @@ignored_emails_headers = {
     'X-Auto-Response-Suppress' => 'oof',
-    'Auto-Submitted' => /^auto-/
+    'Auto-Submitted' => /\Aauto-(replied|generated)/
+>>>>>>> 2.6.5
   }
 
   # Processes incoming emails
@@ -55,18 +91,26 @@ class MailHandler < ActionMailer::Base
     sender_email = email.from.to_a.first.to_s.strip
     # Ignore emails received from the application emission address to avoid hell cycles
     if sender_email.downcase == Setting.mail_from.to_s.strip.downcase
-      if logger && logger.info
+      if logger
         logger.info  "MailHandler: ignoring email from Redmine emission address [#{sender_email}]"
       end
       return false
     end
     # Ignore auto generated emails
     self.class.ignored_emails_headers.each do |key, ignored_value|
+<<<<<<< HEAD
       value = email.header_string(key)
       if value
         value = value.to_s.downcase
         if (ignored_value.is_a?(Regexp) && value.match(ignored_value)) || value == ignored_value
           if logger && logger.info
+=======
+      value = email.header[key]
+      if value
+        value = value.to_s.downcase
+        if (ignored_value.is_a?(Regexp) && value.match(ignored_value)) || value == ignored_value
+          if logger
+>>>>>>> 2.6.5
             logger.info "MailHandler: ignoring email with #{key}:#{value} header"
           end
           return false
@@ -75,7 +119,7 @@ class MailHandler < ActionMailer::Base
     end
     @user = User.find_by_mail(sender_email) if sender_email.present?
     if @user && !@user.active?
-      if logger && logger.info
+      if logger
         logger.info  "MailHandler: ignoring email from non-active user [#{@user.login}]"
       end
       return false
@@ -88,20 +132,23 @@ class MailHandler < ActionMailer::Base
       when 'create'
         @user = create_user_from_email
         if @user
-          if logger && logger.info
+          if logger
             logger.info "MailHandler: [#{@user.login}] account created"
           end
-          Mailer.deliver_account_information(@user, @user.password)
+          add_user_to_group(@@handler_options[:default_group])
+          unless @@handler_options[:no_account_notice]
+            Mailer.account_information(@user, @user.password).deliver
+          end
         else
-          if logger && logger.error
+          if logger
             logger.error "MailHandler: could not create account for [#{sender_email}]"
           end
           return false
         end
       else
         # Default behaviour, emails from unknown users are ignored
-        if logger && logger.info
-          logger.info  "MailHandler: ignoring email from unknown user [#{sender_email}]" 
+        if logger
+          logger.info  "MailHandler: ignoring email from unknown user [#{sender_email}]"
         end
         return false
       end
@@ -112,12 +159,13 @@ class MailHandler < ActionMailer::Base
 
   private
 
-  MESSAGE_ID_RE = %r{^<redmine\.([a-z0-9_]+)\-(\d+)\.\d+@}
-  ISSUE_REPLY_SUBJECT_RE = %r{\[[^\]]*#(\d+)\]}
+  MESSAGE_ID_RE = %r{^<?redmine\.([a-z0-9_]+)\-(\d+)\.\d+(\.[a-f0-9]+)?@}
+  ISSUE_REPLY_SUBJECT_RE = %r{\[(?:[^\]]*\s+)?#(\d+)\]}
   MESSAGE_REPLY_SUBJECT_RE = %r{\[[^\]]*msg(\d+)\]}
 
   def dispatch
     headers = [email.in_reply_to, email.references].flatten.compact
+    subject = email.subject.to_s
     if headers.detect {|h| h.to_s =~ MESSAGE_ID_RE}
       klass, object_id = $1, $2.to_i
       method_name = "receive_#{klass}_reply"
@@ -126,9 +174,9 @@ class MailHandler < ActionMailer::Base
       else
         # ignoring it
       end
-    elsif m = email.subject.match(ISSUE_REPLY_SUBJECT_RE)
+    elsif m = subject.match(ISSUE_REPLY_SUBJECT_RE)
       receive_issue_reply(m[1].to_i)
-    elsif m = email.subject.match(MESSAGE_REPLY_SUBJECT_RE)
+    elsif m = subject.match(MESSAGE_REPLY_SUBJECT_RE)
       receive_message_reply(m[1].to_i)
     else
       dispatch_to_default
@@ -160,22 +208,23 @@ class MailHandler < ActionMailer::Base
     issue = Issue.new(:author => user, :project => project)
     issue.safe_attributes = issue_attributes_from_keywords(issue)
     issue.safe_attributes = {'custom_field_values' => custom_field_values_from_keywords(issue)}
-    issue.subject = email.subject.to_s.chomp[0,255]
+    issue.subject = cleaned_up_subject
     if issue.subject.blank?
       issue.subject = '(no subject)'
     end
     issue.description = cleaned_up_text_body
+    issue.start_date ||= Date.today if Setting.default_issue_start_date_to_creation_date?
 
     # add To and Cc as watchers before saving so the watchers can reply to Redmine
     add_watchers(issue)
     issue.save!
     add_attachments(issue)
-    logger.info "MailHandler: issue ##{issue.id} created by #{user}" if logger && logger.info
+    logger.info "MailHandler: issue ##{issue.id} created by #{user}" if logger
     issue
   end
 
   # Adds a note to an existing issue
-  def receive_issue_reply(issue_id)
+  def receive_issue_reply(issue_id, from_journal=nil)
     issue = Issue.find_by_id(issue_id)
     return unless issue
     # check permission
@@ -190,12 +239,16 @@ class MailHandler < ActionMailer::Base
     @@handler_options[:issue].clear
 
     journal = issue.init_journal(user)
+    if from_journal && from_journal.private_notes?
+      # If the received email was a reply to a private note, make the added note private
+      issue.private_notes = true
+    end
     issue.safe_attributes = issue_attributes_from_keywords(issue)
     issue.safe_attributes = {'custom_field_values' => custom_field_values_from_keywords(issue)}
     journal.notes = cleaned_up_text_body
     add_attachments(issue)
     issue.save!
-    if logger && logger.info
+    if logger
       logger.info "MailHandler: issue ##{issue.id} updated by #{user}"
     end
     journal
@@ -205,7 +258,7 @@ class MailHandler < ActionMailer::Base
   def receive_journal_reply(journal_id)
     journal = Journal.find_by_id(journal_id)
     if journal && journal.journalized_type == 'Issue'
-      receive_issue_reply(journal.journalized_id)
+      receive_issue_reply(journal.journalized_id, journal)
     end
   end
 
@@ -220,7 +273,7 @@ class MailHandler < ActionMailer::Base
       end
 
       if !message.locked?
-        reply = Message.new(:subject => email.subject.gsub(%r{^.*msg\d+\]}, '').strip,
+        reply = Message.new(:subject => cleaned_up_subject.gsub(%r{^.*msg\d+\]}, '').strip,
                             :content => cleaned_up_text_body)
         reply.author = user
         reply.board = message.board
@@ -228,7 +281,7 @@ class MailHandler < ActionMailer::Base
         add_attachments(reply)
         reply
       else
-        if logger && logger.info
+        if logger
           logger.info "MailHandler: ignoring reply from [#{sender_email}] to a locked topic"
         end
       end
@@ -238,12 +291,27 @@ class MailHandler < ActionMailer::Base
   def add_attachments(obj)
     if email.attachments && email.attachments.any?
       email.attachments.each do |attachment|
+        next unless accept_attachment?(attachment)
         obj.attachments << Attachment.create(:container => obj,
-                          :file => attachment,
+                          :file => attachment.decoded,
+                          :filename => attachment.filename,
                           :author => user,
-                          :content_type => attachment.content_type)
+                          :content_type => attachment.mime_type)
       end
     end
+  end
+
+  # Returns false if the +attachment+ of the incoming email should be ignored
+  def accept_attachment?(attachment)
+    @excluded ||= Setting.mail_handler_excluded_filenames.to_s.split(',').map(&:strip).reject(&:blank?)
+    @excluded.each do |pattern|
+      regexp = %r{\A#{Regexp.escape(pattern).gsub("\\*", ".*")}\z}i
+      if attachment.filename.to_s =~ regexp
+        logger.info "MailHandler: ignoring attachment #{attachment.filename} matching #{pattern}"
+        return false
+      end
+    end
+    true
   end
 
   # Adds To and Cc as watchers of the given object if the sender has the
@@ -252,8 +320,9 @@ class MailHandler < ActionMailer::Base
     if user.allowed_to?("add_#{obj.class.name.underscore}_watchers".to_sym, obj.project)
       addresses = [email.to, email.cc].flatten.compact.uniq.collect {|a| a.strip.downcase}
       unless addresses.empty?
-        watchers = User.active.find(:all, :conditions => ['LOWER(mail) IN (?)', addresses])
-        watchers.each {|w| obj.add_watcher(w)}
+        User.active.where('LOWER(mail) IN (?)', addresses).each do |w|
+          obj.add_watcher(w)
+        end
       end
     end
   end
@@ -265,7 +334,7 @@ class MailHandler < ActionMailer::Base
     else
       @keywords[attr] = begin
         if (options[:override] || @@handler_options[:allow_override].include?(attr.to_s)) &&
-              (v = extract_keyword!(plain_text_body, attr, options[:format]))
+              (v = extract_keyword!(cleaned_up_text_body, attr, options[:format]))
           v
         elsif !@@handler_options[:issue][attr].blank?
           @@handler_options[:issue][attr]
@@ -289,8 +358,13 @@ class MailHandler < ActionMailer::Base
     keys.reject! {|k| k.blank?}
     keys.collect! {|k| Regexp.escape(k)}
     format ||= '.+'
-    text.gsub!(/^(#{keys.join('|')})[ \t]*:[ \t]*(#{format})\s*$/i, '')
-    $2 && $2.strip
+    keyword = nil
+    regexp = /^(#{keys.join('|')})[ \t]*:[ \t]*(#{format})\s*$/i
+    if m = text.match(regexp)
+      keyword = m[2].strip
+      text.sub!(regexp, '')
+    end
+    keyword
   end
 
   def target_project
@@ -298,6 +372,13 @@ class MailHandler < ActionMailer::Base
     # * parse the email To field
     # * specific project (eg. Setting.mail_handler_target_project)
     target = Project.find_by_identifier(get_keyword(:project))
+    if target.nil?
+      # Invalid project keyword, use the project specified as the default one
+      default_project = @@handler_options[:issue][:project]
+      if default_project.present?
+        target = Project.find_by_identifier(default_project)
+      end
+    end
     raise MissingInformation.new('Unable to determine target project') if target.nil?
     target
   end
@@ -321,7 +402,7 @@ class MailHandler < ActionMailer::Base
     }.delete_if {|k, v| v.blank? }
 
     if issue.new_record? && attrs['tracker_id'].nil?
-      attrs['tracker_id'] = issue.project.trackers.find(:first).try(:id)
+      attrs['tracker_id'] = issue.project.trackers.first.try(:id)
     end
 
     attrs
@@ -330,8 +411,8 @@ class MailHandler < ActionMailer::Base
   # Returns a Hash of issue custom field values extracted from keywords in the email body
   def custom_field_values_from_keywords(customized)
     customized.custom_field_values.inject({}) do |h, v|
-      if value = get_keyword(v.custom_field.name, :override => true)
-        h[v.custom_field.id.to_s] = value
+      if keyword = get_keyword(v.custom_field.name, :override => true)
+        h[v.custom_field.id.to_s] = v.custom_field.value_from_keyword(keyword, customized)
       end
       h
     end
@@ -341,25 +422,41 @@ class MailHandler < ActionMailer::Base
   # If not found (eg. HTML-only email), returns the body with tags removed
   def plain_text_body
     return @plain_text_body unless @plain_text_body.nil?
-    parts = @email.parts.collect {|c| (c.respond_to?(:parts) && !c.parts.empty?) ? c.parts : c}.flatten
-    if parts.empty?
-      parts << @email
+
+    parts = if (text_parts = email.all_parts.select {|p| p.mime_type == 'text/plain'}).present?
+              text_parts
+            elsif (html_parts = email.all_parts.select {|p| p.mime_type == 'text/html'}).present?
+              html_parts
+            else
+              [email]
+            end
+
+    parts.reject! do |part|
+      part.header[:content_disposition].try(:disposition_type) == 'attachment'
     end
-    plain_text_part = parts.detect {|p| p.content_type == 'text/plain'}
-    if plain_text_part.nil?
-      # no text/plain part found, assuming html-only email
-      # strip html tags and remove doctype directive
-      @plain_text_body = strip_tags(@email.body.to_s)
-      @plain_text_body.gsub! %r{^<!DOCTYPE .*$}, ''
-    else
-      @plain_text_body = plain_text_part.body.to_s
+
+    @plain_text_body = parts.map do |p|
+      body_charset = Mail::RubyVer.respond_to?(:pick_encoding) ?
+                       Mail::RubyVer.pick_encoding(p.charset).to_s : p.charset
+      Redmine::CodesetUtil.to_utf8(p.body.decoded, body_charset)
+    end.join("\r\n")
+
+    # strip html tags and remove doctype directive
+    if parts.any? {|p| p.mime_type == 'text/html'}
+      @plain_text_body = strip_tags(@plain_text_body.strip)
+      @plain_text_body.sub! %r{^<!DOCTYPE .*$}, ''
     end
-    @plain_text_body.strip!
+
     @plain_text_body
   end
 
   def cleaned_up_text_body
-    cleanup_body(plain_text_body)
+    @cleaned_up_text_body ||= cleanup_body(plain_text_body)
+  end
+
+  def cleaned_up_subject
+    subject = email.subject.to_s
+    subject.strip[0,255]
   end
 
   def self.full_sanitizer
@@ -381,18 +478,17 @@ class MailHandler < ActionMailer::Base
     assign_string_attribute_with_limit(user, 'login', email_address, User::LOGIN_LENGTH_LIMIT)
 
     names = fullname.blank? ? email_address.gsub(/@.*$/, '').split('.') : fullname.split
-    assign_string_attribute_with_limit(user, 'firstname', names.shift)
-    assign_string_attribute_with_limit(user, 'lastname', names.join(' '))
+    assign_string_attribute_with_limit(user, 'firstname', names.shift, 30)
+    assign_string_attribute_with_limit(user, 'lastname', names.join(' '), 30)
     user.lastname = '-' if user.lastname.blank?
-
-    password_length = [Setting.password_min_length.to_i, 10].max
-    user.password = Redmine::Utils.random_hex(password_length / 2 + 1)
     user.language = Setting.default_language
+    user.generate_password = true
+    user.mail_notification = 'only_my_events'
 
     unless user.valid?
       user.login = "user#{Redmine::Utils.random_hex(6)}" unless user.errors[:login].blank?
       user.firstname = "-" unless user.errors[:firstname].blank?
-      user.lastname  = "-" unless user.errors[:lastname].blank?
+      (puts user.errors[:lastname];user.lastname  = "-") unless user.errors[:lastname].blank?
     end
 
     user
@@ -401,9 +497,16 @@ class MailHandler < ActionMailer::Base
   # Creates a User for the +email+ sender
   # Returns the user or nil if it could not be created
   def create_user_from_email
-    addr = email.from_addrs.to_a.first
-    if addr && !addr.spec.blank?
-      user = self.class.new_user_from_attributes(addr.spec, TMail::Unquoter.unquote_and_convert_to(addr.name, 'utf-8'))
+    from = email.header['from'].to_s
+    addr, name = from, nil
+    if m = from.match(/^"?(.+?)"?\s+<(.+@.+)>$/)
+      addr, name = m[2], m[1]
+    end
+    if addr.present?
+      user = self.class.new_user_from_attributes(addr, name)
+      if @@handler_options[:no_notification]
+        user.mail_notification = 'none'
+      end
       if user.save
         user
       else
@@ -413,6 +516,19 @@ class MailHandler < ActionMailer::Base
     else
       logger.error "MailHandler: failed to create User: no FROM address found" if logger
       nil
+    end
+  end
+
+  # Adds the newly created user to default group
+  def add_user_to_group(default_group)
+    if default_group.present?
+      default_group.split(',').each do |group_name|
+        if group = Group.named(group_name).first
+          group.users << @user
+        elsif logger
+          logger.warn "MailHandler: could not add user to [#{group_name}], group not found"
+        end
+      end
     end
   end
 
@@ -436,13 +552,13 @@ class MailHandler < ActionMailer::Base
                  }
     if assignee.nil? && keyword.match(/ /)
       firstname, lastname = *(keyword.split) # "First Last Throwaway"
-      assignee ||= assignable.detect {|a| 
+      assignee ||= assignable.detect {|a|
                      a.is_a?(User) && a.firstname.to_s.downcase == firstname &&
                        a.lastname.to_s.downcase == lastname
                    }
     end
     if assignee.nil?
-      assignee ||= assignable.detect {|a| a.is_a?(Group) && a.name.downcase == keyword}
+      assignee ||= assignable.detect {|a| a.name.downcase == keyword}
     end
     assignee
   end

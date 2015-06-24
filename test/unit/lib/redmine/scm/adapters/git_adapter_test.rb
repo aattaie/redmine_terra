@@ -1,8 +1,23 @@
-# encoding: utf-8
+# Redmine - project management software
+# Copyright (C) 2006-2015  Jean-Philippe Lang
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 require File.expand_path('../../../../../../test_helper', __FILE__)
 begin
-  require 'mocha'
+  require 'mocha/setup'
 
   class GitAdapterTest < ActiveSupport::TestCase
     REPOSITORY_PATH = Rails.root.join('tmp/test/git_repository').to_s
@@ -46,8 +61,10 @@ begin
                    )
         assert @adapter
         @char_1 = CHAR_1_HEX.dup
+        @str_felix_hex  = FELIX_HEX.dup
         if @char_1.respond_to?(:force_encoding)
           @char_1.force_encoding('UTF-8')
+          @str_felix_hex.force_encoding('ASCII-8BIT')
         end
       end
 
@@ -375,22 +392,18 @@ begin
         assert_equal "4a07fe31bffcf2888791f3e6cbc9c4545cefe3e8", last_rev.scmid
         assert_equal "4a07fe31bffcf2888791f3e6cbc9c4545cefe3e8", last_rev.identifier
         assert_equal "Adam Soltys <asoltys@gmail.com>", last_rev.author
-        assert_equal "2009-06-24 05:27:38".to_time, last_rev.time
+        assert_equal Time.gm(2009, 6, 24, 5, 27, 38), last_rev.time
       end
 
       def test_last_rev_with_spaces_in_filename
         last_rev = @adapter.lastrev("filemane with spaces.txt",
                                     "ed5bb786bbda2dee66a2d50faf51429dbc043a7b")
-        str_felix_hex  = FELIX_HEX.dup
         last_rev_author = last_rev.author
-        if last_rev_author.respond_to?(:force_encoding)
-          last_rev_author.force_encoding('UTF-8')
-        end
         assert_equal "ed5bb786bbda2dee66a2d50faf51429dbc043a7b", last_rev.scmid
         assert_equal "ed5bb786bbda2dee66a2d50faf51429dbc043a7b", last_rev.identifier
-        assert_equal "#{str_felix_hex} <felix@fachschaften.org>",
+        assert_equal "#{@str_felix_hex} <felix@fachschaften.org>",
                        last_rev.author
-        assert_equal "2010-09-18 19:59:46".to_time, last_rev.time
+        assert_equal Time.gm(2010, 9, 18, 19, 59, 46), last_rev.time
       end
 
       def test_latin_1_path
@@ -408,6 +421,19 @@ begin
               assert @adapter.diff(p2, r1, r2)
             end
           end
+        end
+      end
+
+      def test_latin_1_user_annotate
+        ['83ca5fd546063a3c7dc2e568ba3355661a9e2b2c', '83ca5fd546063a'].each do |r1|
+          annotate = @adapter.annotate(" filename with a leading space.txt ", r1)
+          assert_kind_of Redmine::Scm::Adapters::Annotate, annotate
+          assert_equal 1, annotate.lines.size
+          assert_equal "And this is a file with a leading and trailing space...",
+                       annotate.lines[0].strip
+          assert_equal "83ca5fd546063a3c7dc2e568ba3355661a9e2b2c",
+                       annotate.revisions[0].identifier
+          assert_equal @str_felix_hex, annotate.revisions[0].author
         end
       end
 
@@ -445,6 +471,23 @@ begin
         assert_equal Time.gm(2009, 6, 19, 4, 37, 23), readme.lastrev.time
       end
 
+      def test_entries_wrong_path_encoding
+        adpt = Redmine::Scm::Adapters::GitAdapter.new(
+                      REPOSITORY_PATH,
+                      nil,
+                      nil,
+                      nil,
+                      'EUC-JP'
+                   )
+        entries1 = adpt.entries('latin-1-dir', '64f1f3e8')
+        assert entries1
+        assert_equal 3, entries1.size
+        f1 = entries1[1]
+        assert_equal nil, f1.name
+        assert_equal nil, f1.path
+        assert_equal 'file', f1.kind
+      end
+
       def test_entries_latin_1_files
         entries1 = @adapter.entries('latin-1-dir', '64f1f3e8')
         assert entries1
@@ -472,6 +515,37 @@ begin
         end
       end
 
+      def test_entry
+        entry = @adapter.entry()
+        assert_equal "", entry.path
+        assert_equal "dir", entry.kind
+        entry = @adapter.entry('')
+        assert_equal "", entry.path
+        assert_equal "dir", entry.kind
+        assert_nil @adapter.entry('invalid')
+        assert_nil @adapter.entry('/invalid')
+        assert_nil @adapter.entry('/invalid/')
+        assert_nil @adapter.entry('invalid/invalid')
+        assert_nil @adapter.entry('invalid/invalid/')
+        assert_nil @adapter.entry('/invalid/invalid')
+        assert_nil @adapter.entry('/invalid/invalid/')
+        ["README", "/README"].each do |path|
+          entry = @adapter.entry(path, '7234cb2750b63f')
+          assert_equal "README", entry.path
+          assert_equal "file", entry.kind
+        end
+        ["sources", "/sources", "/sources/"].each do |path|
+          entry = @adapter.entry(path, '7234cb2750b63f')
+          assert_equal "sources", entry.path
+          assert_equal "dir", entry.kind
+        end
+        ["sources/watchers_controller.rb", "/sources/watchers_controller.rb"].each do |path|
+          entry = @adapter.entry(path, '7234cb2750b63f')
+          assert_equal "sources/watchers_controller.rb", entry.path
+          assert_equal "file", entry.kind
+        end
+      end
+
       def test_path_encoding_default_utf8
         adpt1 = Redmine::Scm::Adapters::GitAdapter.new(
                                   REPOSITORY_PATH
@@ -493,7 +567,7 @@ begin
 
       def test_cat_revision_invalid
         assert     @adapter.cat('README')
-        assert_nil @adapter.cat('README', 'abcd1234efgh')
+        assert_nil @adapter.cat('README', '1234abcd5678')
       end
 
       def test_diff_path_invalid
@@ -501,9 +575,9 @@ begin
       end
 
       def test_diff_revision_invalid
-        assert_nil @adapter.diff(nil, 'abcd1234efgh')
-        assert_nil @adapter.diff(nil, '713f4944648826f5', 'abcd1234efgh')
-        assert_nil @adapter.diff(nil, 'abcd1234efgh', '713f4944648826f5')
+        assert_nil @adapter.diff(nil, '1234abcd5678')
+        assert_nil @adapter.diff(nil, '713f4944648826f5', '1234abcd5678')
+        assert_nil @adapter.diff(nil, '1234abcd5678', '713f4944648826f5')
       end
 
       def test_annotate_path_invalid
@@ -512,7 +586,7 @@ begin
 
       def test_annotate_revision_invalid
         assert     @adapter.annotate('README')
-        assert_nil @adapter.annotate('README', 'abcd1234efgh')
+        assert_nil @adapter.annotate('README', '1234abcd5678')
       end
 
       private

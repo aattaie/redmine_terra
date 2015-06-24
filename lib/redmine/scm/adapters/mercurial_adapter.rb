@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -135,7 +135,7 @@ module Redmine
               output.force_encoding('UTF-8')
             end
             begin
-              @summary = ActiveSupport::XmlMini.parse(output)['rhsummary']
+              @summary = parse_xml(output)['rhsummary']
             rescue
             end
           end
@@ -151,7 +151,7 @@ module Redmine
               output.force_encoding('UTF-8')
             end
             begin
-              ActiveSupport::XmlMini.parse(output)['rhmanifest']['repository']['manifest']
+              parse_xml(output)['rhmanifest']['repository']['manifest']
             rescue
             end
           end
@@ -199,7 +199,7 @@ module Redmine
             end
             begin
               # Mercurial < 1.5 does not support footer template for '</log>'
-              ActiveSupport::XmlMini.parse("#{output}</log>")['log']
+              parse_xml("#{output}</log>")['log']
             rescue
             end
           end
@@ -219,7 +219,7 @@ module Redmine
             end.sort { |a, b| a[:path] <=> b[:path] }
             parents_ary = []
             as_ary(le['parents']['parent']).map do |par|
-              parents_ary << par['__content__'] if par['__content__'] != "000000000000"
+              parents_ary << par['__content__'] if par['__content__'] != "0000000000000000000000000000000000000000"
             end
             yield Revision.new(:revision => le['revision'],
                                :scmid    => le['node'],
@@ -234,7 +234,7 @@ module Redmine
 
         # Returns list of nodes in the specified branch
         def nodes_in_branch(branch, options={})
-          hg_args = ['rhlog', '--template', '{node|short}\n', '--rhbranch', CGI.escape(branch)]
+          hg_args = ['rhlog', '--template', '{node}\n', '--rhbranch', CGI.escape(branch)]
           hg_args << '--from' << CGI.escape(branch)
           hg_args << '--to'   << '0'
           hg_args << '--limit' << options[:limit] if options[:limit]

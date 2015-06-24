@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,12 +35,47 @@ class Token < ActiveRecord::Base
   # Delete all expired tokens
   def self.destroy_expired
     Token.delete_all ["action NOT IN (?) AND created_on < ?", ['feeds', 'api'], Time.now - @@validity_time]
+<<<<<<< HEAD
+=======
   end
 
-private
+  # Returns the active user who owns the key for the given action
+  def self.find_active_user(action, key, validity_days=nil)
+    user = find_user(action, key, validity_days)
+    if user && user.active?
+      user
+    end
+  end
+
+  # Returns the user who owns the key for the given action
+  def self.find_user(action, key, validity_days=nil)
+    token = find_token(action, key, validity_days)
+    if token
+      token.user
+    end
+  end
+
+  # Returns the token for action and key with an optional
+  # validity duration (in number of days)
+  def self.find_token(action, key, validity_days=nil)
+    action = action.to_s
+    key = key.to_s
+    return nil unless action.present? && key =~ /\A[a-z0-9]+\z/i
+
+    token = Token.where(:action => action, :value => key).first
+    if token && (token.action == action) && (token.value == key) && token.user
+      if validity_days.nil? || (token.created_on > validity_days.days.ago)
+        token
+      end
+    end
+>>>>>>> 2.6.5
+  end
+
   def self.generate_token_value
     Redmine::Utils.random_hex(20)
   end
+
+  private
 
   # Removes obsolete tokens (same user and action)
   def delete_previous_tokens

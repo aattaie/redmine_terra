@@ -11,6 +11,10 @@ jsToolBar.strings['Unordered list'] = 'Неподреден списък';
 jsToolBar.strings['Ordered list'] = 'Подреден списък';
 jsToolBar.strings['Quote'] = 'Цитат';
 jsToolBar.strings['Unquote'] = 'Премахване на цитат';
+<<<<<<< HEAD
 jsToolBar.strings['Preformatted text'] = 'Preformatted text';
+=======
+jsToolBar.strings['Preformatted text'] = 'Форматиран текст';
+>>>>>>> 2.6.5
 jsToolBar.strings['Wiki link'] = 'Връзка до Wiki страница';
 jsToolBar.strings['Image'] = 'Изображение';

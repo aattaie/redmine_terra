@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2011  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,7 +45,7 @@ class Repository::Darcs < Repository
     scm.entry(path, patch.nil? ? nil : patch.scmid)
   end
 
-  def entries(path=nil, identifier=nil)
+  def scm_entries(path=nil, identifier=nil)
     patch = nil
     if ! identifier.nil?
       patch = changesets.find_by_revision(identifier)
@@ -68,6 +68,7 @@ class Repository::Darcs < Repository
     end
     entries
   end
+  protected :scm_entries
 
   def cat(path, identifier=nil)
     patch = identifier.nil? ? nil : changesets.find_by_revision(identifier.to_s)
@@ -79,7 +80,7 @@ class Repository::Darcs < Repository
     return nil if patch_from.nil?
     patch_to = changesets.find_by_revision(rev_to) if rev_to
     if path.blank?
-      path = patch_from.changes.collect{|change| change.path}.join(' ')
+      path = patch_from.filechanges.collect{|change| change.path}.join(' ')
     end
     patch_from ? scm.diff(path, patch_from.scmid, patch_to ? patch_to.scmid : nil) : nil
   end
