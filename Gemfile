@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 <<<<<<< HEAD
-gem "rails", "2.3.14"
+#gem "rails", "2.3.14"
 gem "i18n", "~> 0.4.2"
 gem "coderay", "~> 1.0.6"
 =======
